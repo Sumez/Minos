@@ -2,10 +2,12 @@
 //
 
 #include "stdafx.h"
+#include "WindowsApp.h"
 
 
 int _tmain(int argc, _TCHAR* argv[])
 {
+	WindowsApp:Start();
 	return 0;
 }
 
