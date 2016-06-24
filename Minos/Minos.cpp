@@ -7,7 +7,7 @@
 
 int _tmain(int argc, _TCHAR* argv[])
 {
-	WindowsApp:Start();
+	WindowsApp::Start();
 	return 0;
 }
 

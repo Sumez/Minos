@@ -80,7 +80,6 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="SFML-2.3.2\examples\shader\Effect.hpp" />
     <ClInclude Include="SFML-2.3.2\include\SFML\Audio.hpp" />
     <ClInclude Include="SFML-2.3.2\include\SFML\Audio\AlResource.hpp" />
     <ClInclude Include="SFML-2.3.2\include\SFML\Audio\Export.hpp" />
@@ -179,20 +178,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Minos.cpp" />
-    <ClCompile Include="SFML-2.3.2\examples\ftp\Ftp.cpp" />
-    <ClCompile Include="SFML-2.3.2\examples\opengl\OpenGL.cpp" />
-    <ClCompile Include="SFML-2.3.2\examples\pong\Pong.cpp" />
-    <ClCompile Include="SFML-2.3.2\examples\shader\Shader.cpp" />
-    <ClCompile Include="SFML-2.3.2\examples\sockets\Sockets.cpp" />
-    <ClCompile Include="SFML-2.3.2\examples\sockets\TCP.cpp" />
-    <ClCompile Include="SFML-2.3.2\examples\sockets\UDP.cpp" />
-    <ClCompile Include="SFML-2.3.2\examples\sound-capture\SoundCapture.cpp" />
-    <ClCompile Include="SFML-2.3.2\examples\sound\Sound.cpp" />
-    <ClCompile Include="SFML-2.3.2\examples\voip\Client.cpp" />
-    <ClCompile Include="SFML-2.3.2\examples\voip\Server.cpp" />
-    <ClCompile Include="SFML-2.3.2\examples\voip\VoIP.cpp" />
-    <ClCompile Include="SFML-2.3.2\examples\win32\Win32.cpp" />
-    <ClCompile Include="SFML-2.3.2\examples\window\Window.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
