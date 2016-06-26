@@ -303,6 +303,15 @@
     <ClInclude Include="WindowsApp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Game\Game.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Windows\GraphicsAdapter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Game\Mino.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -312,6 +321,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="WindowsApp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Game\Game.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Windows\GraphicsAdapter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Game\Mino.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -729,5 +747,13 @@
     <None Include="SFML-2.3.2\include\SFML\System\Vector3.inl">
       <Filter>Header Files</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="test.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="test.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>

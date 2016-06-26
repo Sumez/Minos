@@ -1,5 +1,8 @@
+#pragma once
 #include "stdafx.h"
 #include "WindowsApp.h"
+#include "Game/Game.h"
+#include "Windows/GraphicsAdapter.h"
 
 void WindowsApp::Start(void)
 {
@@ -7,11 +10,16 @@ void WindowsApp::Start(void)
 		return;
 
 	_mainWindow.create(sf::VideoMode(1024, 768, 32), "Minos");
+	GraphicsAdapter graphics = GraphicsAdapter(_mainWindow);
+	graphics.Init();
+
+	_game = Game(graphics);
 	_gameState = WindowsApp::Playing;
+	_game.Init();
 
 	sf::Clock clock = sf::Clock();
 	sf::Time* elapsed;
-	int counter = 0;
+	sf::Int64 counter = 0;
 	while (!IsExiting())
 	{
 		elapsed = &clock.getElapsedTime();
@@ -32,12 +40,10 @@ bool WindowsApp::IsExiting()
 	else
 		return false;
 }
-using namespace std;
+
 void WindowsApp::GameLoop()
 {
 	sf::Event currentEvent;
-	_mainWindow.clear(sf::Color(255, 0, 0));
-	_mainWindow.display();
 	while (_mainWindow.pollEvent(currentEvent))
 	{
 
@@ -58,8 +64,13 @@ void WindowsApp::GameLoop()
 		}
 		}
 	}
+	_game.Update();
+	_mainWindow.clear(sf::Color(255, 0, 0));
+	_game.Draw();
+	_mainWindow.display();
 }
 
 
 WindowsApp::GameState WindowsApp::_gameState = Uninitialized;
 sf::RenderWindow WindowsApp::_mainWindow; 
+Game WindowsApp::_game = Game(GraphicsAdapter(_mainWindow));;

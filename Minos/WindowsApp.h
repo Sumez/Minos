@@ -1,3 +1,5 @@
+#pragma once
+#include "Game\Game.h"
 
 class WindowsApp
 {
@@ -15,5 +17,6 @@ private:
 	};
 
 	static GameState _gameState;
+	static Game _game;
 	static sf::RenderWindow _mainWindow;
 };
