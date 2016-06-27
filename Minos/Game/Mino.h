@@ -12,15 +12,18 @@ public:
 	void SetCoords(std::vector<std::vector<int>>* newCoords);
 	std::vector<std::vector<int>> GetRotated(int direction);
 	void Shift(int x, int y);
+	void RegisterRotation(int direction);
 
 	int Color = 0;
 	int GravityTimer = 0;
 	int LockTimer = 0;
 	int DroppedDistance = 0;
 	bool IsLocking = false;
+	bool SimpleWallkick;
 	
 private:
 	void SetRotation(int rotationIndex);
+	int GetNewRotationIndex(int direction);
 
 	int _currentRotation = 0;
 	int _coords[4][2];

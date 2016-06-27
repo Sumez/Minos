@@ -1,11 +1,12 @@
 #pragma once
+#include "../Game/DisplayGrid.h"
 
 class GraphicsAdapter {
 public:
 	GraphicsAdapter(sf::RenderWindow& renderWindow);
 	void DrawSprite(sf::Sprite sprite);
 	void DrawMino(std::vector<std::vector<int>> coords);
-	void DrawCell(int x, int y);
+	void DrawCell(DisplayGrid* grid, int x, int y);
 	void Init();
 private:
 	sf::RenderTarget* _renderTarget;

@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "../stdafx.h"
+#include "../Game/DisplayGrid.h"
 #include "GraphicsAdapter.h"
 
 GraphicsAdapter::GraphicsAdapter(sf::RenderWindow& renderWindow) {
@@ -34,11 +35,10 @@ void GraphicsAdapter::DrawSprite(sf::Sprite sprite) {
 
 void GraphicsAdapter::DrawMino(std::vector<std::vector<int>> coords) {
 	for (int i = 0; i < 4; i++) {
-		DrawCell(coords[i][0], coords[i][1]);
-		_renderTarget->draw(_sprite2);
+		DrawCell(0, coords[i][0], coords[i][1]);
 	};
 };
-void GraphicsAdapter::DrawCell(int x, int y) {
-	_sprite2.setPosition(x * cellSize, y * cellSize);
+void GraphicsAdapter::DrawCell(DisplayGrid* grid, int x, int y) {
+	_sprite2.setPosition(x * grid->CellWidth + grid->X, y * grid->CellHeight + grid->Y);
 	_renderTarget->draw(_sprite2);
 };

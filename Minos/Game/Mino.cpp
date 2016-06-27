@@ -14,7 +14,8 @@ Mino::Mino(MinoType type) {
 		{{-1, 0}, {0, 0}, {1, 0}, {0, 1}},
 		{{0, -1}, {0, 0}, {0, 1}, {-1, 0}},
 		{{1, 1}, {0, 1}, {-1, 1}, {0, 0}},
-		{{0, 1}, {0, 0}, {0, -1}, {1, 0}}
+		{{0, 1}, {0, 0}, {0, -1}, {1, 0}}
+
 	};
 	RotationSet iRotation;
 	iRotation.Rotations = {
@@ -22,6 +23,7 @@ Mino::Mino(MinoType type) {
 		{{1, -1}, {1, 0}, {1, 1}, {1, 2}}
 	};
 	iRotation.RotationCount = 2;
+	iRotation.SimpleWallkick = false;
 
 	RotationSet lRotation;
 	lRotation.Rotations = {
@@ -69,12 +71,11 @@ Mino::Mino(MinoType type) {
 	Color = 1;
 	_rotations = &rotationSystem[type];
 
-	int initial[4][2] = { { 4, 2 }, { 5, 2 }, { 6, 2 }, { 5, 3 } };
-	memcpy(_coords, initial, sizeof(initial));
+	SimpleWallkick = _rotations->SimpleWallkick;
 
 	SetRotation(_currentRotation);
 	Shift(_rotations->Spawn[0], _rotations->Spawn[1]);
-	/* memcpy(_coords, initialRotation, sizeof(initialRotation));*/};
+};
 
 void Mino::SetRotation(int rotationIndex) {
 	_currentRotation = rotationIndex;
@@ -84,19 +85,29 @@ void Mino::SetRotation(int rotationIndex) {
 std::vector<std::vector<int>> Mino::GetRotated(int direction) {
 	std::vector<std::vector<int>> returnValue(4, std::vector<int>(2));
 	auto oldRotation =* _rotations->GetRotation(_currentRotation);
-	_currentRotation += direction;
-	
-	if (_currentRotation >= _rotations->RotationCount) _currentRotation -= _rotations->RotationCount;
-	if (_currentRotation < 0) _currentRotation += _rotations->RotationCount;
-		auto newRotation =* _rotations->GetRotation(_currentRotation);	for (int i = 0; i < 4; i++) {
+	int newRotationIndex = GetNewRotationIndex(direction);
+	auto newRotation = *_rotations->GetRotation(newRotationIndex);
 
+	for (int i = 0; i < 4; i++) {
 		int x, y;
 
 		x = _coords[i][0] - oldRotation[i][0] + newRotation[i][0];
 		y = _coords[i][1] - oldRotation[i][1] + newRotation[i][1];
 		returnValue[i] = { x, y };
-	}	return returnValue;
+	}
+
+	return returnValue;
 }
+
+int Mino::GetNewRotationIndex(int direction) {
+	int newRotationIndex = _currentRotation + direction;
+	if (newRotationIndex >= _rotations->RotationCount) newRotationIndex -= _rotations->RotationCount;
+	if (newRotationIndex < 0) newRotationIndex += _rotations->RotationCount;
+	return newRotationIndex;
+};
+void Mino::RegisterRotation(int direction) {
+	_currentRotation = GetNewRotationIndex(direction);
+};
 
 std::vector<std::vector<int>> Mino::GetCoords() {
 	std::vector<std::vector<int>> returnValue(4, std::vector<int>(2));

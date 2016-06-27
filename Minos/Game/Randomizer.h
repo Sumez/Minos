@@ -6,6 +6,7 @@ class Randomizer {
 public:
 	Randomizer();
 	Mino::MinoType GetMino();
+	Mino::MinoType GetPreview(int index);
 
 private:
 	Mino::MinoType _bag[7];

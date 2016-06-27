@@ -15,9 +15,26 @@ void Game::Init() {
 	
 	_randomizer = Randomizer();
 	_grid = std::vector<std::vector<int>>(22, std::vector<int>(10));
+	_rowsToClear = std::vector<int>(0);
 	_blockSprite = sf::Sprite(image);
 	spawnTimer = 120;
 	_graphics->Init();
+
+	_gameGrid = DisplayGrid();
+	_gameGrid.X = 100;
+	_gameGrid.Y = 100;
+	_gameGrid.CellWidth = 30;
+	_gameGrid.CellHeight = 30;
+	_gameGrid.Height = 22;
+	_gameGrid.Width = 10;
+
+	_previewGrid = DisplayGrid();
+	_previewGrid.X = 100;
+	_previewGrid.Y = 0;
+	_previewGrid.CellWidth = 30;
+	_previewGrid.CellHeight = 30;
+	_previewGrid.Height = 4;
+	_previewGrid.Width = 4;
 };
 
 void Game::Update() {
@@ -27,22 +44,28 @@ void Game::Update() {
 	int dasCharge = 14;
 	int dasRepeat = 1;
 
+	int rotate = 0;
+	int moveX = 0;
+	int moveY = 0;
+
 	bool left = sf::Keyboard::isKeyPressed(sf::Keyboard::Left);
 	bool right = sf::Keyboard::isKeyPressed(sf::Keyboard::Right);
-	bool down = sf::Keyboard::isKeyPressed(sf::Keyboard::Down);
+	bool softDrop = sf::Keyboard::isKeyPressed(sf::Keyboard::Down);
+	bool sonicDrop = sf::Keyboard::isKeyPressed(sf::Keyboard::Up);
+	bool hardDrop = sf::Keyboard::isKeyPressed(sf::Keyboard::Space);
 
 	bool rLeft = sf::Keyboard::isKeyPressed(sf::Keyboard::Z);
 	bool rRight = sf::Keyboard::isKeyPressed(sf::Keyboard::X);
 
 	if (rLeft && !_rLeft) { // TODO: check if mino exists
-		_currentMino.SetCoords(&_currentMino.GetRotated(-1));
+		rotate = -1;
 	}
 	if (rRight && !_rRight) { // TODO: check if mino exists
-		_currentMino.SetCoords(&_currentMino.GetRotated(1));
+		rotate = 1;
 	}
 	_rLeft = rLeft;
 	_rRight = rRight;
-
+	
 	if (!left && !right) {
 		dasState = 0;
 		dasTimer = 0;
@@ -50,22 +73,22 @@ void Game::Update() {
 	if (left && dasState >= 0) {
 		dasState = -1;
 		dasTimer = dasCharge;
-		TryMove(_currentMino, dasState, 0);
+		moveX = dasState;
 	};
 	if (right && dasState <= 0) {
 		dasState = 1;
 		dasTimer = dasCharge;
-		TryMove(_currentMino, dasState, 0);
+		moveX = dasState;
 	};
 	if (dasState != 0) {
 		if (dasTimer == 0) {
 			dasTimer = dasRepeat;
-			TryMove(_currentMino, dasState, 0);
+			moveX = dasState;
 		}
 		dasTimer--;
 	}
 
-	if (down) TryMove(_currentMino, 0, 1);
+	if (softDrop) moveY = 1;
 
 	if (spawnTimer >= 0) {
 		spawnTimer--;
@@ -74,9 +97,44 @@ void Game::Update() {
 			spawnTimer = -1;
 		}
 	}
-	else ApplyGravity();
+	if (lineClearTimer >= 0) {
+		lineClearTimer--;
+		if (lineClearTimer == 0) {
+			ClearLines();
+			lineClearTimer = -1;
+		}
+	}
+	if (spawnTimer < 0 && lineClearTimer < 0) { // TODO: if Mino exists
+		ApplyInput(rotate, moveX, moveY, sonicDrop, hardDrop);
+		ApplyGravity();
+	}
 };
 
+void Game::ApplyInput(int rotate, int moveX, int moveY, bool sonicDrop, bool hardDrop) {
+	bool lock = false;
+	if (rotate != 0) TryRotate(_currentMino, rotate);
+	if (moveX != 0)  TryMove(_currentMino, moveX, 0);
+	if (moveY != 0) {
+		if (TryMove(_currentMino, 0, moveY)) {
+			_currentMino.DroppedDistance++;
+			_currentMino.GravityTimer = 0;
+			_currentMino.LockTimer = 0; // TODO: If drop reset
+		}
+		else lock = true; // TODO: Not if SRS softdrop
+	}
+	if (sonicDrop || hardDrop) {
+		int dropDistance = 0;
+		while (!Collides(_currentMino, 0, dropDistance + 1)) dropDistance++;
+		if (dropDistance > 0) {
+			_currentMino.DroppedDistance += dropDistance;
+			_currentMino.GravityTimer = 0;
+			_currentMino.LockTimer = 0; // TODO: If drop reset
+		}
+		_currentMino.Shift(0, dropDistance);
+		if (hardDrop) lock = true;
+	}
+	if (lock) LockMino(_currentMino);
+};
 void Game::ApplyGravity() {
 	int gravityResolution = 256;
 	int gravity = 10; // 5120;
@@ -106,11 +164,27 @@ void Game::ApplyGravity() {
 	}
 };
 
+void Game::ClearLines() {
+	int areDelay = 25;
+	int numRows = _rowsToClear.size();
+
+	std::sort(_rowsToClear.begin(), _rowsToClear.end());
+
+	for (int i = 0; i < numRows; i++) {
+		for (int j = _rowsToClear[i]; j > 0; j--) {
+			_grid[j] = _grid[j - 1];
+		}
+		_grid[0] = std::vector<int>(10);
+	}	_rowsToClear.clear();	BeginSpawningNextMino(areDelay); // TODO: Get-function based on the fact that this was a line clear
+};
 void Game::LockMino(Mino & mino) {
 	int areDelay = 25;
+	int lineClearDelay = 40;
 
 	auto coords = mino.GetCoords();
 	int lowestRow = 0;
+	bool clearing = false;
+
 	for (int i = 0; i < 4; i++) {
 		int x = coords[i][0];
 		int y = coords[i][1];
@@ -118,20 +192,20 @@ void Game::LockMino(Mino & mino) {
 
 		_grid[y][x] = 1; // get mino color
 
-		bool clear = true;
+		bool clearThisLine = true;
 		for (int col = 0; col < 10; col++)
-			if (_grid[y][col] == 0) clear = false;
+			if (_grid[y][col] == 0) clearThisLine = false;
 
-		if (clear) {
-			/*if (typeof settings.lineClearDelay == 'string') timer = getTiming(settings.lineClearDelay, level);
-			else timer = settings.lineClearDelay;
-			state = gameState.CLEARING;
-			if (rowsToClear.indexOf(y) == -1) rowsToClear.push(y);
-			for (var col = 0; col < width; col++)
-				rows[y][col] = colors.CLEARING;*/
+		if (clearThisLine) {
+			clearing = true;
+
+			lineClearTimer = lineClearDelay;
+			bool isAlreadySetToClear = std::find(_rowsToClear.begin(), _rowsToClear.end(), y) != _rowsToClear.end();
+			if (!isAlreadySetToClear) _rowsToClear.push_back(y);
+			for (int col = 0; col < 10; col++) _grid[y][col] = 1; // TODO: Color for clearing row
 		}
 	}
-	BeginSpawningNextMino(areDelay); // TODO: If not clearing rows  // TODO: Get-function based on lowest row of previous mino
+	if (!clearing) BeginSpawningNextMino(areDelay); // TODO: If not clearing rows  // TODO: Get-function based on lowest row of previous mino
 	// sounds.lock.play();
 	//addScore(dropDistance);
 	//inputHandler.ResetBuffers(); // Reset ARS and rotation buttons
@@ -154,11 +228,23 @@ bool Game::TryMove(Mino & mino, int x, int y) {
 	mino.Shift(x, y);
 	return true;
 };
-bool Game::Collides(Mino & mino, int x, int y) {
-	auto coords = mino.GetCoords();
+bool Game::TryRotate(Mino & mino, int direction) {
+	auto rotated = _currentMino.GetRotated(direction);
+	if (Collides(rotated)) {
+		if (!mino.SimpleWallkick) return false;
+		for (int i = 0; i < 4; i++) rotated[i][0]++; // Then try moving right one
+		if (Collides(rotated)) {
+			for (int i = 0; i < 4; i++) rotated[i][0] -= 2; // Then try moving left one
+			if (Collides(rotated)) return false;
+		}	}
+	mino.SetCoords(&rotated);
+	mino.RegisterRotation(direction);
+	return true;
+};
+bool Game::Collides(std::vector<std::vector<int>> & coords) {
 	for (int i = 0; i < 4; i++) {
-		int checkX = coords[i][0] + x;
-		int checkY = coords[i][1] + y;
+		int checkX = coords[i][0];
+		int checkY = coords[i][1];
 
 		if (checkY < 0) continue;
 		if (checkX < 0) return true;
@@ -168,19 +254,45 @@ bool Game::Collides(Mino & mino, int x, int y) {
 	}
 	return false;
 };
+bool Game::Collides(Mino & mino, int x, int y) {
+	auto coords = mino.GetCoords();
+	for (int i = 0; i < 4; i++) {
+		coords[i][0] += x;
+		coords[i][1] += y;
+	}
+	return Collides(coords);
+};
 
 void Game::Draw() {
 	
+	// Test textures
 	_graphics->DrawSprite(_blockSprite);
 	
-	if (spawnTimer < 0) // TODO: Keep track of active mino(s)
-		_graphics->DrawMino(_currentMino.GetCoords());
+	// Draw well
 
+	// Draw stack
 	for (int y = 0; y < 22; y++) {
 		for (int x = 0; x < 10; x++) {
-			if (_grid[y][x] > 0) _graphics->DrawCell(x, y);
+			if (_grid[y][x] > 0) _graphics->DrawCell(&_gameGrid, x, y);
 		}
 	}
+
+	// draw Current Mino
+	if (spawnTimer < 0) { // TODO: Keep track of active mino(s)
+		auto coords = _currentMino.GetCoords();
+		for (int i = 0; i < 4; i++) {
+			_graphics->DrawCell(&_gameGrid, coords[i][0], coords[i][1]);
+		};
+	}
+
+	// Draw white outline
+
+	// draw Preview
+	Mino preview = Mino(_randomizer.GetPreview(0));
+	auto coords = preview.GetCoords();
+	for (int i = 0; i < 4; i++) {
+		_graphics->DrawCell(&_previewGrid, coords[i][0], coords[i][1]);
+	};
 };
 
 void Game::Exit() {

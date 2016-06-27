@@ -83,6 +83,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Game\DisplayGrid.h" />
     <ClInclude Include="Game\Game.h" />
     <ClInclude Include="Game\Mino.h" />
     <ClInclude Include="Game\Randomizer.h" />
@@ -185,6 +186,7 @@
     <ClInclude Include="Windows\GraphicsAdapter.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Game\DisplayGrid.cpp" />
     <ClCompile Include="Game\Game.cpp" />
     <ClCompile Include="Game\Mino.cpp" />
     <ClCompile Include="Game\Randomizer.cpp" />

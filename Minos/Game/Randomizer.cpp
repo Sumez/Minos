@@ -32,6 +32,9 @@ Mino::MinoType Randomizer::GetMino() {
 	_previews[0] = GetRandomMino();
 	return newPiece;
 }
+Mino::MinoType Randomizer::GetPreview(int index) {
+	return _previews[index];
+}
 
 Mino::MinoType Randomizer::GetRandomMino() {
 	int rngMaxTries = 4;
