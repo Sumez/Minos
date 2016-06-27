@@ -7,4 +7,5 @@ struct DisplayGrid {
 	int Height;
 	int CellWidth;
 	int CellHeight;
+	int InvisibleRows;
 };

@@ -22,15 +22,16 @@ void Game::Init() {
 
 	_gameGrid = DisplayGrid();
 	_gameGrid.X = 100;
-	_gameGrid.Y = 100;
+	_gameGrid.Y = 50;
 	_gameGrid.CellWidth = 30;
 	_gameGrid.CellHeight = 30;
 	_gameGrid.Height = 22;
 	_gameGrid.Width = 10;
+	_gameGrid.InvisibleRows = 2;
 
 	_previewGrid = DisplayGrid();
 	_previewGrid.X = 100;
-	_previewGrid.Y = 0;
+	_previewGrid.Y = -50;
 	_previewGrid.CellWidth = 30;
 	_previewGrid.CellHeight = 30;
 	_previewGrid.Height = 4;
@@ -175,7 +176,9 @@ void Game::ClearLines() {
 			_grid[j] = _grid[j - 1];
 		}
 		_grid[0] = std::vector<int>(10);
-	}	_rowsToClear.clear();	BeginSpawningNextMino(areDelay); // TODO: Get-function based on the fact that this was a line clear
+	}
+	_rowsToClear.clear();
+	BeginSpawningNextMino(areDelay); // TODO: Get-function based on the fact that this was a line clear
 };
 void Game::LockMino(Mino & mino) {
 	int areDelay = 25;
@@ -236,7 +239,8 @@ bool Game::TryRotate(Mino & mino, int direction) {
 		if (Collides(rotated)) {
 			for (int i = 0; i < 4; i++) rotated[i][0] -= 2; // Then try moving left one
 			if (Collides(rotated)) return false;
-		}	}
+		}
+	}
 	mino.SetCoords(&rotated);
 	mino.RegisterRotation(direction);
 	return true;
@@ -269,11 +273,12 @@ void Game::Draw() {
 	_graphics->DrawSprite(_blockSprite);
 	
 	// Draw well
+	_graphics->DrawBackdrop(&_gameGrid);
 
 	// Draw stack
 	for (int y = 0; y < 22; y++) {
 		for (int x = 0; x < 10; x++) {
-			if (_grid[y][x] > 0) _graphics->DrawCell(&_gameGrid, x, y);
+			if (_grid[y][x] > 0) _graphics->DrawCell(&_gameGrid, x, y, CellMode::Stack);
 		}
 	}
 
