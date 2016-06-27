@@ -10,6 +10,8 @@ void WindowsApp::Start(void)
 		return;
 
 	_mainWindow.create(sf::VideoMode(1024, 768, 32), "Minos");
+	_mainWindow.setPosition(sf::Vector2i(-1400, 200));
+	_mainWindow.setSize(sf::Vector2u(400, 300));
 	GraphicsAdapter graphics = GraphicsAdapter(_mainWindow);
 	graphics.Init();
 

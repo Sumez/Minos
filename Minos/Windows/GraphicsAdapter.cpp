@@ -34,7 +34,11 @@ void GraphicsAdapter::DrawSprite(sf::Sprite sprite) {
 
 void GraphicsAdapter::DrawMino(std::vector<std::vector<int>> coords) {
 	for (int i = 0; i < 4; i++) {
-		_sprite2.setPosition(coords[i][0] * cellSize, coords[i][1] * cellSize);
+		DrawCell(coords[i][0], coords[i][1]);
 		_renderTarget->draw(_sprite2);
 	};
+};
+void GraphicsAdapter::DrawCell(int x, int y) {
+	_sprite2.setPosition(x * cellSize, y * cellSize);
+	_renderTarget->draw(_sprite2);
 };
