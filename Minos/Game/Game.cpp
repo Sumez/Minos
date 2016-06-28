@@ -103,6 +103,7 @@ void Game::Update() {
 			// TODO: If IRS!
 			if (_rLeft) TryRotate(_currentMino, -1);
 			if (_rRight) TryRotate(_currentMino, 1);
+			if (_rLeft || _rRight) rotate = 0; // If pressing rotate on the exact moment a piece spawns, don't double rotate
 
 			if (Collides(_currentMino.GetCoords())) {
 				// TODO: Game over
@@ -117,15 +118,15 @@ void Game::Update() {
 		}
 	}
 	if (spawnTimer < 0 && lineClearTimer < 0) { // TODO: if Mino exists
-		ApplyInput(rotate, moveX, moveY, sonicDrop, hardDrop);
 		ApplyGravity();
+		ApplyInput(rotate, moveX, moveY, sonicDrop, hardDrop);
 	}
 };
 
 void Game::ApplyInput(int rotate, int moveX, int moveY, bool sonicDrop, bool hardDrop) {
 	bool lock = false;
-	if (rotate != 0) TryRotate(_currentMino, rotate);
-	if (moveX != 0)  TryMove(_currentMino, moveX, 0);
+	if (rotate != 0) TryRotate(_currentMino, rotate); // Important! Attempt rotations before moving left/right, to allow synchro moves
+	if (moveX != 0) TryMove(_currentMino, moveX, 0);
 	if (moveY != 0) {
 		if (TryMove(_currentMino, 0, moveY)) {
 			_currentMino.DroppedDistance++;
