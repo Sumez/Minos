@@ -10,7 +10,6 @@ void WindowsApp::Start(void)
 		return;
 
 	_mainWindow.create(sf::VideoMode(1024, 768, 32), "Minos");
-	_mainWindow.setMouseCursorVisible(false);
 	_mainWindow.setPosition(sf::Vector2i(-1400, 200));
 	_mainWindow.setSize(sf::Vector2u(400, 300));
 	GraphicsAdapter graphics = GraphicsAdapter(_mainWindow);
@@ -64,6 +63,7 @@ void WindowsApp::GameLoop()
 				if (currentEvent.key.alt && currentEvent.key.code == sf::Keyboard::Return) {
 					_mainWindow.close();
 					_mainWindow.create(sf::VideoMode(1024, 768, 32), "Minos", sf::Style::Fullscreen);
+					_mainWindow.setMouseCursorVisible(false);
 				}
 				if (currentEvent.key.code == sf::Keyboard::Escape) _gameState = WindowsApp::Exiting;
 			}

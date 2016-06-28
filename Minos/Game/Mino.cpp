@@ -68,7 +68,6 @@ Mino::Mino(MinoType type) {
 	rotationSystem.insert(std::pair<Mino::MinoType, RotationSet>(Mino::MinoType::Z, zRotation));
 
 
-	Color = 1;
 	_rotations = &rotationSystem[type];
 
 	SimpleWallkick = _rotations->SimpleWallkick;
@@ -117,6 +116,22 @@ std::vector<std::vector<int>> Mino::GetCoords() {
 	};
 	return returnValue;
 };
+std::vector<std::vector<int>> Mino::GetGhostCoords() {
+	std::vector<std::vector<int>> returnValue(4, std::vector<int>(2));
+	for (int i = 0; i < 4; i++) {
+		returnValue[i][0] = _ghostCoords[i][0];
+		returnValue[i][1] = _ghostCoords[i][1];
+	};
+	return returnValue;
+};
+
+void Mino::SetGhostDistance(int height) {
+	for (int i = 0; i < 4; i++) {
+		_ghostCoords[i][0] = _coords[i][0];
+		_ghostCoords[i][1] = _coords[i][1] + height;
+	};
+};
+
 void Mino::SetCoords(std::vector<std::vector<int>>* newCoords) {
 	for (int i = 0; i < 4; i++) {
 		_coords[i][0] = (*newCoords)[i][0];

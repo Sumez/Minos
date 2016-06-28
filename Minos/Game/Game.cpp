@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "../stdafx.h"
-#include "game.h"
+#include "Game.h"
 
 
 Game::Game(GraphicsAdapter& graphics) {
@@ -94,8 +94,19 @@ void Game::Update() {
 	if (spawnTimer >= 0) {
 		spawnTimer--;
 		if (spawnTimer == 0) {
-			_currentMino = Mino(_randomizer.GetMino());
+			auto minoType = _randomizer.GetMino();
+			_currentMino = Mino(minoType);
+			_currentMino.Color = _settings.GetPieceColor(minoType);
+			UpdateGhost(_currentMino);
 			spawnTimer = -1;
+
+			// TODO: If IRS!
+			if (_rLeft) TryRotate(_currentMino, -1);
+			if (_rRight) TryRotate(_currentMino, 1);
+
+			if (Collides(_currentMino.GetCoords())) {
+				// TODO: Game over
+			}
 		}
 	}
 	if (lineClearTimer >= 0) {
@@ -132,6 +143,7 @@ void Game::ApplyInput(int rotate, int moveX, int moveY, bool sonicDrop, bool har
 			_currentMino.LockTimer = 0; // TODO: If drop reset
 		}
 		_currentMino.Shift(0, dropDistance);
+		_currentMino.SetGhostDistance(0);
 		if (hardDrop) lock = true;
 	}
 	if (lock) LockMino(_currentMino);
@@ -193,7 +205,7 @@ void Game::LockMino(Mino & mino) {
 		int y = coords[i][1];
 		if (y > lowestRow) lowestRow = y;
 
-		_grid[y][x] = 1; // get mino color
+		_grid[y][x] = mino.Color;
 
 		bool clearThisLine = true;
 		for (int col = 0; col < 10; col++)
@@ -203,9 +215,8 @@ void Game::LockMino(Mino & mino) {
 			clearing = true;
 
 			lineClearTimer = lineClearDelay;
-			bool isAlreadySetToClear = std::find(_rowsToClear.begin(), _rowsToClear.end(), y) != _rowsToClear.end();
-			if (!isAlreadySetToClear) _rowsToClear.push_back(y);
-			for (int col = 0; col < 10; col++) _grid[y][col] = 1; // TODO: Color for clearing row
+			if (!IsLineSetToClear(y)) _rowsToClear.push_back(y);
+			/* for (int col = 0; col < 10; col++) _grid[y][col] = 1; */ // don't set new color on row, use flag instead?
 		}
 	}
 	if (!clearing) BeginSpawningNextMino(areDelay); // TODO: If not clearing rows  // TODO: Get-function based on lowest row of previous mino
@@ -220,6 +231,9 @@ void Game::LockMino(Mino & mino) {
 		}
 	}*/
 };
+bool Game::IsLineSetToClear(int rowIndex) {
+	return std::find(_rowsToClear.begin(), _rowsToClear.end(), rowIndex) != _rowsToClear.end();
+};
 void Game::BeginSpawningNextMino(int delay) {
 
 	spawnTimer = delay;
@@ -229,6 +243,7 @@ void Game::BeginSpawningNextMino(int delay) {
 bool Game::TryMove(Mino & mino, int x, int y) {
 	if (Collides(mino, x, y)) return false;
 	mino.Shift(x, y);
+	UpdateGhost(mino);
 	return true;
 };
 bool Game::TryRotate(Mino & mino, int direction) {
@@ -243,7 +258,13 @@ bool Game::TryRotate(Mino & mino, int direction) {
 	}
 	mino.SetCoords(&rotated);
 	mino.RegisterRotation(direction);
+	UpdateGhost(mino);
 	return true;
+};
+void Game::UpdateGhost(Mino & mino) {
+	int distance = 0;
+	while (!Collides(mino, 0, distance + 1)) distance++;
+	_currentMino.SetGhostDistance(distance);
 };
 bool Game::Collides(std::vector<std::vector<int>> & coords) {
 	for (int i = 0; i < 4; i++) {
@@ -268,7 +289,9 @@ bool Game::Collides(Mino & mino, int x, int y) {
 };
 
 void Game::Draw() {
-	
+
+	int lockDelay = 30;
+
 	// Test textures
 	_graphics->DrawSprite(_blockSprite);
 	
@@ -276,31 +299,47 @@ void Game::Draw() {
 	_graphics->DrawBackdrop(&_gameGrid);
 
 	// Draw stack
+	std::vector<std::vector<int>> outlineBuffer;
 	for (int y = 0; y < 22; y++) {
+		int mode = CellMode::Stack;
+		if (IsLineSetToClear(y)) mode = mode | CellMode::Clearing;
 		for (int x = 0; x < 10; x++) {
-			if (_grid[y][x] > 0) _graphics->DrawCell(&_gameGrid, x, y, CellMode::Stack);
+			if (_grid[y][x] > 0) {
+				_graphics->DrawCell(&_gameGrid, x, y, _grid[y][x], 0, static_cast<CellMode>(mode));
+				if (y > 0 && _grid[y - 1][x] == 0) outlineBuffer.push_back({ x, y - 2, 0 });
+				if (x < 10 - 1 && _grid[y][x + 1] == 0) outlineBuffer.push_back({ x, y - 2, 1 });
+				if (y < 22 - 1 && _grid[y + 1][x] == 0) outlineBuffer.push_back({ x, y - 2, 2 });
+				if (x > 0 && _grid[y][x - 1] == 0) outlineBuffer.push_back({ x, y - 2, 3 });
+			}
 		}
 	}
 
 	// draw Current Mino
-	if (spawnTimer < 0) { // TODO: Keep track of active mino(s)
-		auto coords = _currentMino.GetCoords();
+	if (spawnTimer < 0 && lineClearTimer < 0) { // TODO: Keep track of active mino(s)
+
+		auto coords = _currentMino.GetGhostCoords();
 		for (int i = 0; i < 4; i++) {
-			_graphics->DrawCell(&_gameGrid, coords[i][0], coords[i][1]);
+			_graphics->DrawCell(&_gameGrid, coords[i][0], coords[i][1], _currentMino.Color, 0, CellMode::Ghost);
+		};
+
+		coords = _currentMino.GetCoords();
+		for (int i = 0; i < 4; i++) {
+			_graphics->DrawCell(&_gameGrid, coords[i][0], coords[i][1], _currentMino.Color, (double)_currentMino.LockTimer / lockDelay);
 		};
 	}
 
 	// Draw white outline
+	if (outlineBuffer.size() > 0) _graphics->DrawOutline(&_gameGrid, outlineBuffer);
 
 	// draw Preview
-	Mino preview = Mino(_randomizer.GetPreview(0));
+	auto previewType = _randomizer.GetPreview(0);
+	Mino preview = Mino(previewType);
 	auto coords = preview.GetCoords();
 	for (int i = 0; i < 4; i++) {
-		_graphics->DrawCell(&_previewGrid, coords[i][0], coords[i][1]);
+		_graphics->DrawCell(&_previewGrid, coords[i][0], coords[i][1], _settings.GetPieceColor(previewType));
 	};
 };
 
 void Game::Exit() {
-
 
 };

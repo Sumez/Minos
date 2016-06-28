@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "../stdafx.h"
 #include "../Game/DisplayGrid.h"
+#include "../Game/Mino.h"
 #include "GraphicsAdapter.h"
 
 GraphicsAdapter::GraphicsAdapter(sf::RenderWindow& renderWindow) {
@@ -58,7 +59,7 @@ void GraphicsAdapter::MakeColorSprite(MinoColors color, std::vector<unsigned> co
 	txMinoCell->draw(rectangle, 8, sf::Quads);
 	sprite.setTexture(txMinoCell->getTexture());
 
-	_colorSprites.insert(std::pair<MinoColors, sf::Sprite>(color, sprite));
+	_colorSprites.insert(std::pair<int, sf::Sprite>(color, sprite));
 };
 
 void GraphicsAdapter::DrawSprite(sf::Sprite sprite) {
@@ -68,24 +69,73 @@ void GraphicsAdapter::DrawSprite(sf::Sprite sprite) {
 
 void GraphicsAdapter::DrawMino(std::vector<std::vector<int>> coords) {
 	for (int i = 0; i < 4; i++) {
-		DrawCell(0, coords[i][0], coords[i][1]);
+		DrawCell(0, coords[i][0], coords[i][1], Red);
 	};
 };
-void GraphicsAdapter::DrawCell(DisplayGrid* grid, int x, int y, CellMode modeFlags) {
+void GraphicsAdapter::DrawCell(DisplayGrid* grid, int x, int y, int color, double dark, CellMode modeFlags) {
 
-	auto sprite = _colorSprites[MinoColors::Red];
+	auto sprite = _colorSprites[color];
+	auto blend = sf::Color(255, 255, 255);
 
 	sprite.setPosition(x * grid->CellWidth + grid->X, y * grid->CellHeight + grid->Y);
+	if (modeFlags & CellMode::Ghost || modeFlags & CellMode::Clearing) {
+		blend.a = 51;
+	}
 	if (modeFlags & CellMode::Stack) {
-		sprite.setColor(sf::Color(128, 128, 128));
+		blend.r = blend.g = blend.b = 155;
 	}
-	else if (modeFlags & CellMode::Ghost || modeFlags & CellMode::Clearing) {
-		sprite.setColor(sf::Color(255, 255, 255, 128));
+	if (dark > 0) {
+		blend.r = blend.g = blend.b = 255 - 100 * dark;
 	}
-	else {
-		sprite.setColor(sf::Color(255, 255, 255));
-	}
+	sprite.setColor(blend);
 	_renderTarget->draw(sprite);
+};
+
+void GraphicsAdapter::DrawOutline(DisplayGrid* grid, std::vector<std::vector<int>> buffer) {
+	int bufferSize = buffer.size();
+	std::vector<sf::Vertex> vertices;
+
+	int outlineWidth = 2;
+	int cWidth = grid->CellWidth;
+	int cHeight = grid->CellHeight;
+	int offsetX = grid->X;
+	int offsetY = grid->Y + cHeight * grid->InvisibleRows;
+	auto color = sf::Color(0xffffffff);
+
+	for (int i = 0; i < bufferSize; i++) {
+		int x = buffer[i][0] * cWidth + offsetX;
+		int y = buffer[i][1] * cHeight + offsetY;
+		int type = buffer[i][2];
+
+		switch (type){
+		case 0:
+			vertices.push_back(sf::Vertex(sf::Vector2f(x + cWidth, y), color));
+			vertices.push_back(sf::Vertex(sf::Vector2f(x, y), color));
+			vertices.push_back(sf::Vertex(sf::Vector2f(x, y + outlineWidth), color));
+			vertices.push_back(sf::Vertex(sf::Vector2f(x + cWidth, y + outlineWidth), color));
+			break;
+		case 1:
+			vertices.push_back(sf::Vertex(sf::Vector2f(x + cWidth, y), color));
+			vertices.push_back(sf::Vertex(sf::Vector2f(x + cWidth - outlineWidth, y), color));
+			vertices.push_back(sf::Vertex(sf::Vector2f(x + cWidth - outlineWidth, y + cHeight), color));
+			vertices.push_back(sf::Vertex(sf::Vector2f(x + cWidth, y + cHeight), color));
+			break;
+		case 2:
+			vertices.push_back(sf::Vertex(sf::Vector2f(x, y + cHeight), color));
+			vertices.push_back(sf::Vertex(sf::Vector2f(x + cWidth, y + cHeight), color));
+			vertices.push_back(sf::Vertex(sf::Vector2f(x + cWidth, y + cHeight - outlineWidth), color));
+			vertices.push_back(sf::Vertex(sf::Vector2f(x, y + cHeight - outlineWidth), color));
+			break;
+		case 3:
+			vertices.push_back(sf::Vertex(sf::Vector2f(x, y + cHeight), color));
+			vertices.push_back(sf::Vertex(sf::Vector2f(x + outlineWidth, y + cHeight), color));
+			vertices.push_back(sf::Vertex(sf::Vector2f(x + outlineWidth, y), color));
+			vertices.push_back(sf::Vertex(sf::Vector2f(x, y), color));
+			break;
+		}
+	}
+
+	_renderTarget->draw(&vertices[0], vertices.size(), sf::Quads);
 };
 
 void GraphicsAdapter::DrawBackdrop(DisplayGrid* grid) {

@@ -3,6 +3,7 @@
 #include "Mino.h"
 #include "Randomizer.h"
 #include "DisplayGrid.h"
+#include "Settings.h"
 
 class Game {
 
@@ -22,9 +23,11 @@ private:
 
 	bool TryMove(Mino & mino, int x, int y);
 	bool TryRotate(Mino & mino, int direction);
+	void UpdateGhost(Mino & mino);
 	bool Collides(std::vector<std::vector<int>> & coords);
 	bool Collides(Mino & mino, int x, int y);
 	void LockMino(Mino & mino);
+	bool IsLineSetToClear(int rowIndex);
 
 	std::vector<std::vector<int>> _grid;
 	std::vector<int> _rowsToClear;
@@ -34,6 +37,7 @@ private:
 	sf::Sprite _blockSprite = sf::Sprite();
 	sf::Texture image;
 	Mino _currentMino;
+	Settings _settings;
 
 	DisplayGrid _gameGrid;
 	DisplayGrid _previewGrid;
