@@ -3,8 +3,12 @@
 #include "Game.h"
 
 
-Game::Game(GraphicsAdapter& graphics) {
+Game::Game() {
+
+}
+Game::Game(GraphicsAdapter& graphics, AudioAdapter& audio) {
 	_graphics = &graphics;
+	_audio = &audio;
 }
 
 void Game::Init() {
@@ -191,11 +195,12 @@ void Game::ClearLines() {
 		_grid[0] = std::vector<int>(10);
 	}
 	_rowsToClear.clear();
+	_audio->Play(AudioAdapter::Pickup);
 	BeginSpawningNextMino(areDelay); // TODO: Get-function based on the fact that this was a line clear
 };
 void Game::LockMino(Mino & mino) {
 	int areDelay = 25;
-	int lineClearDelay = 40;
+	int lineClearDelay = 40; // 1; // 40;
 
 	auto coords = mino.GetCoords();
 	int lowestRow = 0;
@@ -221,7 +226,7 @@ void Game::LockMino(Mino & mino) {
 		}
 	}
 	if (!clearing) BeginSpawningNextMino(areDelay); // TODO: If not clearing rows  // TODO: Get-function based on lowest row of previous mino
-	// sounds.lock.play();
+	_audio->Play(AudioAdapter::Tick);
 	//addScore(dropDistance);
 	//inputHandler.ResetBuffers(); // Reset ARS and rotation buttons
 

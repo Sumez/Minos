@@ -54,7 +54,7 @@
       <AdditionalIncludeDirectories>SFML-2.3.2/include/;../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;sfml-system-d.lib;sfml-main-d.lib;sfml-graphics-d.lib;sfml-audio-d.lib;sfml-network-d.lib;sfml-window-d.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>SFML-2.3.2/lib/</AdditionalLibraryDirectories>
@@ -71,11 +71,11 @@
       <AdditionalIncludeDirectories>SFML-2.3.2/include/;../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;sfml-system-s.lib;sfml-main.lib;sfml-graphics-s.lib;sfml-audio.lib;sfml-network.lib;sfml-window-s.lib;opengl32.lib;winmm.lib;freetype.lib;jpeg.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;sfml-system-s.lib;sfml-main.lib;sfml-graphics-s.lib;sfml-audio-s.lib;sfml-network.lib;sfml-window-s.lib;opengl32.lib;winmm.lib;freetype.lib;jpeg.lib;openal32.lib;flac.lib;vorbisenc.lib;vorbisfile.lib;vorbis.lib;ogg.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>SFML-2.3.2/lib/</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
@@ -184,6 +184,7 @@
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="WindowsApp.h" />
+    <ClInclude Include="Windows\AudioAdapter.h" />
     <ClInclude Include="Windows\GraphicsAdapter.h" />
   </ItemGroup>
   <ItemGroup>
@@ -199,6 +200,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="WindowsApp.cpp" />
+    <ClCompile Include="Windows\AudioAdapter.cpp" />
     <ClCompile Include="Windows\GraphicsAdapter.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -218,6 +220,14 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <Media Include="blip.wav" />
+    <Media Include="noise.wav" />
+    <Media Include="pickup.wav" />
+    <Media Include="powerup.wav" />
+    <Media Include="ready.wav" />
+    <Media Include="tick.wav" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

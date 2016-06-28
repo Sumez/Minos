@@ -3,6 +3,7 @@
 #include "WindowsApp.h"
 #include "Game/Game.h"
 #include "Windows/GraphicsAdapter.h"
+#include "Windows/AudioAdapter.h"
 
 void WindowsApp::Start(void)
 {
@@ -10,12 +11,14 @@ void WindowsApp::Start(void)
 		return;
 
 	_mainWindow.create(sf::VideoMode(1024, 768, 32), "Minos");
-	_mainWindow.setPosition(sf::Vector2i(-1400, 200));
-	_mainWindow.setSize(sf::Vector2u(400, 300));
+	//_mainWindow.setPosition(sf::Vector2i(-1400, 200));
+	//_mainWindow.setSize(sf::Vector2u(400, 300));
 	GraphicsAdapter graphics = GraphicsAdapter(_mainWindow);
+	AudioAdapter audio = AudioAdapter();
 	graphics.Init();
+	audio.Init();
 
-	_game = Game(graphics);
+	_game = Game(graphics, audio);
 	_gameState = WindowsApp::Playing;
 	_game.Init();
 
@@ -80,4 +83,4 @@ void WindowsApp::GameLoop()
 
 WindowsApp::GameState WindowsApp::_gameState = Uninitialized;
 sf::RenderWindow WindowsApp::_mainWindow; 
-Game WindowsApp::_game = Game(GraphicsAdapter(_mainWindow));;
+Game WindowsApp::_game;

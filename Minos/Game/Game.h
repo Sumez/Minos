@@ -1,5 +1,6 @@
 #pragma once
 #include "../Windows/GraphicsAdapter.h"
+#include "../Windows/AudioAdapter.h"
 #include "Mino.h"
 #include "Randomizer.h"
 #include "DisplayGrid.h"
@@ -8,7 +9,8 @@
 class Game {
 
 public:
-	Game(GraphicsAdapter& graphics);
+	Game(GraphicsAdapter& graphics, AudioAdapter& audio);
+	Game();
 	void Init();
 	void Update();
 	void Draw();
@@ -34,6 +36,7 @@ private:
 
 	Randomizer _randomizer;
 	GraphicsAdapter* _graphics;
+	AudioAdapter* _audio;
 	sf::Sprite _blockSprite = sf::Sprite();
 	sf::Texture image;
 	Mino _currentMino;
