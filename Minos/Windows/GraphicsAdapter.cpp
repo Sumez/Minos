@@ -28,10 +28,28 @@ void GraphicsAdapter::Init() {
 
 	_font = new sf::Font();
 	_font->loadFromFile("square-deal.ttf");
+
+	MakeBgSprite("bg1.jpg");
+	MakeBgSprite("bg2.jpg");
+	MakeBgSprite("bg3.jpg");
+	MakeBgSprite("bg4.jpg");
+	MakeBgSprite("bg5.jpg");
 };
+
+void GraphicsAdapter::MakeBgSprite(sf::String filename) {
+	auto txBg = new sf::Texture();
+	auto bgSprite = new sf::Sprite();
+	txBg->loadFromFile(filename);
+	bgSprite->setTexture(*txBg);
+	double scale = (double)_renderTarget->getSize().x / bgSprite->getLocalBounds().width;
+	if (scale > 1) bgSprite->setScale(scale, scale);
+	_backgrounds.push_back(bgSprite);
+}
 
 void GraphicsAdapter::MakeColorSprite(MinoColors color, std::vector<unsigned> colorValues)  {
 	auto sprite = sf::Sprite();
+	const int borderWidth = 3;
+	int b2 = 30 - borderWidth;
 
 	auto txMinoCell = new sf::RenderTexture();
 	txMinoCell->create(30, 30);
@@ -49,14 +67,14 @@ void GraphicsAdapter::MakeColorSprite(MinoColors color, std::vector<unsigned> co
 
 	sf::Vertex rectangle[] =
 	{
-		sf::Vertex(sf::Vector2f(2, 2), sf::Color(colorValues[2])),
-		sf::Vertex(sf::Vector2f(28, 2), sf::Color(colorValues[2])),
-		sf::Vertex(sf::Vector2f(28, 15), sf::Color(colorValues[1])),
-		sf::Vertex(sf::Vector2f(2, 15), sf::Color(colorValues[1])),
-		sf::Vertex(sf::Vector2f(2, 15), sf::Color(colorValues[1])),
-		sf::Vertex(sf::Vector2f(28, 15), sf::Color(colorValues[1])),
-		sf::Vertex(sf::Vector2f(28, 28), sf::Color(colorValues[0])),
-		sf::Vertex(sf::Vector2f(2, 28), sf::Color(colorValues[0]))
+		sf::Vertex(sf::Vector2f(borderWidth, borderWidth), sf::Color(colorValues[2])),
+		sf::Vertex(sf::Vector2f(b2, borderWidth), sf::Color(colorValues[2])),
+		sf::Vertex(sf::Vector2f(b2, 15), sf::Color(colorValues[1])),
+		sf::Vertex(sf::Vector2f(borderWidth, 15), sf::Color(colorValues[1])),
+		sf::Vertex(sf::Vector2f(borderWidth, 15), sf::Color(colorValues[1])),
+		sf::Vertex(sf::Vector2f(b2, 15), sf::Color(colorValues[1])),
+		sf::Vertex(sf::Vector2f(b2, b2), sf::Color(colorValues[0])),
+		sf::Vertex(sf::Vector2f(borderWidth, b2), sf::Color(colorValues[0]))
 	};
 
 	txMinoCell->draw(rectangle, 8, sf::Quads);
@@ -177,4 +195,8 @@ void GraphicsAdapter::DrawBackdrop(DisplayGrid* grid) {
 	_rect.setOutlineThickness(15);
 	_rect.setOutlineColor(sf::Color(255, 255, 255));
 	_renderTarget->draw(_rect);
+};
+
+void GraphicsAdapter::DrawBackground(int index) {
+	_renderTarget->draw(*_backgrounds[index]);
 };

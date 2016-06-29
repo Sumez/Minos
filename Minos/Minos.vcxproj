@@ -214,6 +214,12 @@
     <None Include="SFML-2.3.2\include\SFML\System\Vector3.inl" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="bg1.jpg" />
+    <Image Include="bg2.jpg" />
+    <Image Include="bg3.jpg" />
+    <Image Include="bg4.jpg" />
+    <Image Include="bg5.jpg" />
+    <Image Include="bg6.jpg" />
     <Image Include="test.jpg" />
     <Image Include="test.png">
       <DeploymentContent>true</DeploymentContent>

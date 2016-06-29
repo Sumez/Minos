@@ -396,6 +396,24 @@
     <Image Include="test.jpg">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="bg1.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="bg2.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="bg3.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="bg4.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="bg5.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="bg6.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <Media Include="blip.wav">

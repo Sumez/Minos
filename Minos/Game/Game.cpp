@@ -25,6 +25,7 @@ void Game::Init() {
 	_level = 0;
 	_settings.SetLevel(0);
 	_score = 0;
+	_totalLines = 0;
 	spawnTimer = 120;
 	lineClearTimer = -1;
 	_graphics->Init();
@@ -346,6 +347,10 @@ void Game::Draw() {
 
 	// Test textures
 	//_graphics->DrawSprite(_blockSprite);
+
+	// Draw well
+	_graphics->DrawBackground(_level / 100);
+
 	
 	// Draw well
 	_graphics->DrawBackdrop(&_gameGrid);
@@ -397,6 +402,9 @@ void Game::Draw() {
 
 	_graphics->DrawText("Level", 450, 130);
 	_graphics->DrawText(std::to_string(_level), 530, 130);
+
+	_graphics->DrawText("Lines", 450, 170);
+	_graphics->DrawText(std::to_string(_totalLines), 530, 170);
 
 	// Draw symbols
 	int numSymbols = _symbols.size();

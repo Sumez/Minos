@@ -22,6 +22,7 @@ public:
 	void DrawSymbol(DisplayGrid* grid, Symbol type, double opacity, double size);
 	void DrawBackdrop(DisplayGrid* grid);
 	void DrawOutline(DisplayGrid* grid, std::vector<std::vector<int>> buffer);
+	void DrawBackground(int index);
 	void Init();
 private:
 	sf::RenderTarget* _renderTarget;
@@ -29,5 +30,7 @@ private:
 	const int cellSize = 30;
 	std::map<int, sf::Sprite> _colorSprites;
 	void MakeColorSprite(MinoColors color, std::vector<unsigned> colorValues);
+	void MakeBgSprite(sf::String filename);
 	sf::Font* _font;
+	std::vector<sf::Sprite*> _backgrounds;
 };
