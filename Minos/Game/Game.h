@@ -9,6 +9,7 @@
 class Game {
 
 public:
+	
 	Game(GraphicsAdapter& graphics, AudioAdapter& audio);
 	Game();
 	void Init();
@@ -18,10 +19,21 @@ public:
 
 private:
 
+	struct DisplayedSymbol {
+		Symbol Type;
+		int Timer = 0;
+		DisplayedSymbol(Symbol type) { Type = type; };
+	};
+	std::vector<DisplayedSymbol> _symbols;
+
 	void ApplyInput(int rotate, int moveX, int moveY, bool sonicDrop, bool hardDrop);
 	void ApplyGravity();
 	void BeginSpawningNextMino(int delay);
 	void ClearLines();
+	void SpawnMino(Mino::MinoType);
+	void IncreaseLevel(int amount);
+	void AddScore(int points);
+	void IncreaseTotalLines(int lines);
 
 	bool TryMove(Mino & mino, int x, int y);
 	bool TryRotate(Mino & mino, int direction);
@@ -50,6 +62,10 @@ private:
 	int dasTimer;
 	int dasState;
 
+	bool _firstMino;
+	int _level;
+	int _score;
+	int _totalLines;
 	bool _rLeft;
 	bool _rRight;
 };

@@ -21,7 +21,12 @@ void Game::Init() {
 	_grid = std::vector<std::vector<int>>(22, std::vector<int>(10));
 	_rowsToClear = std::vector<int>(0);
 	_blockSprite = sf::Sprite(image);
+	_firstMino = true;
+	_level = 0;
+	_settings.SetLevel(0);
+	_score = 0;
 	spawnTimer = 120;
+	lineClearTimer = -1;
 	_graphics->Init();
 
 	_gameGrid = DisplayGrid();
@@ -40,14 +45,12 @@ void Game::Init() {
 	_previewGrid.CellHeight = 30;
 	_previewGrid.Height = 4;
 	_previewGrid.Width = 4;
+
+	_audio->Play(AudioAdapter::ReadyStartGo);
+	_symbols.push_back(DisplayedSymbol(Three));
 };
 
 void Game::Update() {
-
-	//Timing issues: rotate and move at the same time, which is executed first?
-
-	int dasCharge = 14;
-	int dasRepeat = 1;
 
 	int rotate = 0;
 	int moveX = 0;
@@ -68,8 +71,6 @@ void Game::Update() {
 	if (rRight && !_rRight) { // TODO: check if mino exists
 		rotate = 1;
 	}
-	_rLeft = rLeft;
-	_rRight = rRight;
 	
 	if (!left && !right) {
 		dasState = 0;
@@ -77,17 +78,17 @@ void Game::Update() {
 	};
 	if (left && dasState >= 0) {
 		dasState = -1;
-		dasTimer = dasCharge;
+		dasTimer = _settings.DasCharge();
 		moveX = dasState;
 	};
 	if (right && dasState <= 0) {
 		dasState = 1;
-		dasTimer = dasCharge;
+		dasTimer = _settings.DasCharge();
 		moveX = dasState;
 	};
 	if (dasState != 0) {
 		if (dasTimer == 0) {
-			dasTimer = dasRepeat;
+			dasTimer = _settings.DasRepeat();
 			moveX = dasState;
 		}
 		dasTimer--;
@@ -97,21 +98,24 @@ void Game::Update() {
 
 	if (spawnTimer >= 0) {
 		spawnTimer--;
-		if (spawnTimer == 0) {
-			auto minoType = _randomizer.GetMino();
-			_currentMino = Mino(minoType);
-			_currentMino.Color = _settings.GetPieceColor(minoType);
-			UpdateGhost(_currentMino);
-			spawnTimer = -1;
 
-			// TODO: If IRS!
-			if (_rLeft) TryRotate(_currentMino, -1);
-			if (_rRight) TryRotate(_currentMino, 1);
-			if (_rLeft || _rRight) rotate = 0; // If pressing rotate on the exact moment a piece spawns, don't double rotate
-
-			if (Collides(_currentMino.GetCoords())) {
-				// TODO: Game over
+		if (_firstMino) {
+			switch (spawnTimer) {
+			case 80:
+				_symbols.push_back(DisplayedSymbol(Two));
+				break;
+			case 40:
+				_symbols.push_back(DisplayedSymbol(One));
+				break;
+			case 0:
+				_symbols.push_back(DisplayedSymbol(Go));
+				break;
 			}
+		}
+
+		if (spawnTimer == 0) {
+			SpawnMino(_randomizer.GetMino());
+			spawnTimer = -1;
 		}
 	}
 	if (lineClearTimer >= 0) {
@@ -125,17 +129,30 @@ void Game::Update() {
 		ApplyGravity();
 		ApplyInput(rotate, moveX, moveY, sonicDrop, hardDrop);
 	}
+
+	// Set these after spawn logic, to prevent double rotations when rotating on the exact frame a mino spawns (minor difference TODO: confirm this tgm behavior: frame perfect rotation can't prevent game over, like IRS could)
+	_rLeft = rLeft;
+	_rRight = rRight;
+
+	int numSymbols = _symbols.size();
+	for (int i = 0; i < numSymbols; i++) _symbols[i].Timer++;
+	while (!_symbols.empty() && _symbols[0].Timer >= 40) _symbols.erase(_symbols.begin()); // Assumes the first symbol is always the oldest
 };
 
 void Game::ApplyInput(int rotate, int moveX, int moveY, bool sonicDrop, bool hardDrop) {
 	bool lock = false;
-	if (rotate != 0) TryRotate(_currentMino, rotate); // Important! Attempt rotations before moving left/right, to allow synchro moves
-	if (moveX != 0) TryMove(_currentMino, moveX, 0);
+	// Important! Attempt rotations before moving left/right, to allow synchro moves
+	if (rotate != 0 && TryRotate(_currentMino, rotate)) {
+		if (_settings.LockReset() & Settings::RotateReset) _currentMino.LockTimer = 0;
+	}
+	if (moveX != 0 && TryMove(_currentMino, moveX, 0)) {
+		if (_settings.LockReset() & Settings::MoveReset) _currentMino.LockTimer = 0;
+	}
 	if (moveY != 0) {
 		if (TryMove(_currentMino, 0, moveY)) {
 			_currentMino.DroppedDistance++;
 			_currentMino.GravityTimer = 0;
-			_currentMino.LockTimer = 0; // TODO: If drop reset
+			if (_settings.LockReset() & Settings::StepReset) _currentMino.LockTimer = 0;
 		}
 		else lock = true; // TODO: Not if SRS softdrop
 	}
@@ -145,7 +162,7 @@ void Game::ApplyInput(int rotate, int moveX, int moveY, bool sonicDrop, bool har
 		if (dropDistance > 0) {
 			_currentMino.DroppedDistance += dropDistance;
 			_currentMino.GravityTimer = 0;
-			_currentMino.LockTimer = 0; // TODO: If drop reset
+			if (_settings.LockReset() & Settings::StepReset) _currentMino.LockTimer = 0;
 		}
 		_currentMino.Shift(0, dropDistance);
 		_currentMino.SetGhostDistance(0);
@@ -153,26 +170,48 @@ void Game::ApplyInput(int rotate, int moveX, int moveY, bool sonicDrop, bool har
 	}
 	if (lock) LockMino(_currentMino);
 };
+void Game::SpawnMino(Mino::MinoType type) {
+	if (!_firstMino && _settings.LevelOnSpawn() && (_level % 100 < 99) && _level < (_settings.MaxLevel() - 1)) IncreaseLevel(1); // TODO: Check level system + level stop
+
+	_currentMino = Mino(type);
+	_currentMino.Color = _settings.GetPieceColor(type);
+	UpdateGhost(_currentMino);
+
+	if (_settings.Irs()) {
+		if (_rLeft) TryRotate(_currentMino, -1);
+		if (_rRight) TryRotate(_currentMino, 1);
+	}
+	
+	if (Collides(_currentMino.GetCoords())) {
+		// TODO: Game over
+	}
+	_firstMino = 0;
+}
+void Game::IncreaseLevel(int amount) {
+	_level += amount;
+	if (_level >= _settings.MaxLevel()) {
+		_level = _settings.MaxLevel();
+		//TODO: Winning!
+	}
+	_settings.SetLevel(_level);
+};
 void Game::ApplyGravity() {
-	int gravityResolution = 256;
-	int gravity = 10; // 5120;
-	int lockDelay = 30;
 
 	if (_currentMino.IsLocking && !Collides(_currentMino, 0, 1)) _currentMino.IsLocking = false;
 	if (_currentMino.IsLocking) { // Use STATE enum instead?
 		_currentMino.GravityTimer = 0;
 		// TODO: Get LockDelay based on function
-		if (_currentMino.LockTimer >= lockDelay) LockMino(_currentMino);
+		if (_currentMino.LockTimer >= _settings.LockDelay()) LockMino(_currentMino);
 		_currentMino.LockTimer++;
 	}
 	else {
-		_currentMino.GravityTimer += gravity;
-		while (_currentMino.GravityTimer >= gravityResolution) {
-			_currentMino.GravityTimer -= gravityResolution;
+		_currentMino.GravityTimer += _settings.Gravity();
+		while (_currentMino.GravityTimer >= _settings.GravityResolution()) {
+			_currentMino.GravityTimer -= _settings.GravityResolution();
 			if (TryMove(_currentMino, 0, 1)) {
 				_currentMino.DroppedDistance = 0;
 				_currentMino.IsLocking = false;
-				_currentMino.LockTimer = 0; // TODO: If drop reset
+				if (_settings.LockReset() & Settings::StepReset) _currentMino.LockTimer = 0;
 			}
 			else {
 				_currentMino.IsLocking = true;
@@ -183,10 +222,10 @@ void Game::ApplyGravity() {
 };
 
 void Game::ClearLines() {
-	int areDelay = 25;
 	int numRows = _rowsToClear.size();
 
 	std::sort(_rowsToClear.begin(), _rowsToClear.end());
+	int lowestRow = _rowsToClear[numRows - 1];
 
 	for (int i = 0; i < numRows; i++) {
 		for (int j = _rowsToClear[i]; j > 0; j--) {
@@ -196,15 +235,13 @@ void Game::ClearLines() {
 	}
 	_rowsToClear.clear();
 	_audio->Play(AudioAdapter::Pickup);
-	BeginSpawningNextMino(areDelay); // TODO: Get-function based on the fact that this was a line clear
+	BeginSpawningNextMino(_settings.AreDelayOnLineClear(lowestRow));
 };
 void Game::LockMino(Mino & mino) {
-	int areDelay = 25;
-	int lineClearDelay = 40; // 1; // 40;
 
 	auto coords = mino.GetCoords();
 	int lowestRow = 0;
-	bool clearing = false;
+	int clearedRows = 0;
 
 	for (int i = 0; i < 4; i++) {
 		int x = coords[i][0];
@@ -218,16 +255,19 @@ void Game::LockMino(Mino & mino) {
 			if (_grid[y][col] == 0) clearThisLine = false;
 
 		if (clearThisLine) {
-			clearing = true;
-
-			lineClearTimer = lineClearDelay;
-			if (!IsLineSetToClear(y)) _rowsToClear.push_back(y);
-			/* for (int col = 0; col < 10; col++) _grid[y][col] = 1; */ // don't set new color on row, use flag instead?
+			if (!IsLineSetToClear(y)) {
+				_rowsToClear.push_back(y);
+				clearedRows++;
+			}
 		}
 	}
-	if (!clearing) BeginSpawningNextMino(areDelay); // TODO: If not clearing rows  // TODO: Get-function based on lowest row of previous mino
+	if (clearedRows == 0) BeginSpawningNextMino(_settings.AreDelay(lowestRow));
+	else {
+		lineClearTimer = _settings.LineClearDelay();
+		IncreaseTotalLines(clearedRows);
+	}
 	_audio->Play(AudioAdapter::Tick);
-	//addScore(dropDistance);
+	AddScore(_settings.GetDropScore(mino.DroppedDistance));
 	//inputHandler.ResetBuffers(); // Reset ARS and rotation buttons
 
 	/*if (false) { // TODO: Test code to provoke error
@@ -236,6 +276,14 @@ void Game::LockMino(Mino & mino) {
 			rowsToClear[i] = rowsToClear[i] - 1;
 		}
 	}*/
+};
+void Game::AddScore(int points) {
+	_score += points;
+};
+void Game::IncreaseTotalLines(int lines) {
+	_totalLines += lines;
+	AddScore(_settings.GetLineClearScore(lines));
+	IncreaseLevel(lines); //TODO: Depends on level system
 };
 bool Game::IsLineSetToClear(int rowIndex) {
 	return std::find(_rowsToClear.begin(), _rowsToClear.end(), rowIndex) != _rowsToClear.end();
@@ -296,10 +344,8 @@ bool Game::Collides(Mino & mino, int x, int y) {
 
 void Game::Draw() {
 
-	int lockDelay = 30;
-
 	// Test textures
-	_graphics->DrawSprite(_blockSprite);
+	//_graphics->DrawSprite(_blockSprite);
 	
 	// Draw well
 	_graphics->DrawBackdrop(&_gameGrid);
@@ -330,7 +376,7 @@ void Game::Draw() {
 
 		coords = _currentMino.GetCoords();
 		for (int i = 0; i < 4; i++) {
-			_graphics->DrawCell(&_gameGrid, coords[i][0], coords[i][1], _currentMino.Color, (double)_currentMino.LockTimer / lockDelay);
+			_graphics->DrawCell(&_gameGrid, coords[i][0], coords[i][1], _currentMino.Color, (double)_currentMino.LockTimer / _settings.LockDelay());
 		};
 	}
 
@@ -344,6 +390,20 @@ void Game::Draw() {
 	for (int i = 0; i < 4; i++) {
 		_graphics->DrawCell(&_previewGrid, coords[i][0], coords[i][1], _settings.GetPieceColor(previewType));
 	};
+
+	// Draw UI text
+	_graphics->DrawText("Score", 450, 90);
+	_graphics->DrawText(std::to_string(_score), 530, 90);
+
+	_graphics->DrawText("Level", 450, 130);
+	_graphics->DrawText(std::to_string(_level), 530, 130);
+
+	// Draw symbols
+	int numSymbols = _symbols.size();
+	for (int i = 0; i < numSymbols; i++) {
+		auto symbol = _symbols[i];
+		_graphics->DrawSymbol(&_gameGrid, symbol.Type, 1 - (double)symbol.Timer / 40, 1 + (double)symbol.Timer / 40);
+	}
 };
 
 void Game::Exit() {

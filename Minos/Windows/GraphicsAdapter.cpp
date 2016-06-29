@@ -25,6 +25,9 @@ void GraphicsAdapter::Init() {
 	MakeColorSprite(MinoColors::Gray, { 0xccccccff, 0x999999ff, 0x888888ff });
 
 	_rect = sf::RectangleShape(sf::Vector2f(1, 1));
+
+	_font = new sf::Font();
+	_font->loadFromFile("square-deal.ttf");
 };
 
 void GraphicsAdapter::MakeColorSprite(MinoColors color, std::vector<unsigned> colorValues)  {
@@ -62,6 +65,12 @@ void GraphicsAdapter::MakeColorSprite(MinoColors color, std::vector<unsigned> co
 	_colorSprites.insert(std::pair<int, sf::Sprite>(color, sprite));
 };
 
+void GraphicsAdapter::DrawText(std::string text, int x, int y) {
+	auto sfText = sf::Text(text, *_font);
+	sfText.setPosition(x, y);
+	_renderTarget->draw(sfText);
+};
+
 void GraphicsAdapter::DrawSprite(sf::Sprite sprite) {
 	sprite.setPosition(500, 100);
 	_renderTarget->draw(sprite);
@@ -89,6 +98,29 @@ void GraphicsAdapter::DrawCell(DisplayGrid* grid, int x, int y, int color, doubl
 	}
 	sprite.setColor(blend);
 	_renderTarget->draw(sprite);
+};
+void GraphicsAdapter::DrawSymbol(DisplayGrid* grid, Symbol type, double opacity, double scale) {
+	sf::String string;
+	switch (type) {
+	case Symbol::One:
+		string = "1";
+		break;
+	case Symbol::Two:
+		string = "2";
+		break;
+	case Symbol::Three:
+		string = "3";
+		break;
+	case Symbol::Go:
+		string = "GO";
+	}
+	auto sfText = sf::Text(string, *_font, 100);
+	sfText.setPosition(
+		grid->X + (grid->Width * grid->CellWidth - sfText.getLocalBounds().width * scale) / 2,
+		grid->Y + (grid->Height * (grid->CellHeight - grid->InvisibleRows) - sfText.getLocalBounds().height * scale) / 2);
+	sfText.setScale(scale, scale);
+	sfText.setColor(sf::Color(255, 255, 255, 255 * opacity));
+	_renderTarget->draw(sfText);
 };
 
 void GraphicsAdapter::DrawOutline(DisplayGrid* grid, std::vector<std::vector<int>> buffer) {
