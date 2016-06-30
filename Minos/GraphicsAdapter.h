@@ -20,8 +20,7 @@ public:
 	virtual void DrawCell(DisplayGrid* grid, int x, int y, int color, double dark = 0, CellMode modeFlags = CellMode::None) = 0;
 	virtual void DrawSymbol(DisplayGrid* grid, Symbol type, double opacity, double size) = 0;
 	virtual void DrawBackdrop(DisplayGrid* grid) = 0;
+	virtual void DrawRectangle(int x1, int y1, int x2, int y2, unsigned color = 0x00000088) = 0;
 	virtual void DrawOutline(DisplayGrid* grid, std::vector<std::vector<int>> buffer) = 0;
 	virtual void DrawBackground(int index) = 0;
-
-	virtual std::vector<int> GetMousePosition() = 0; // TODO: inputadapter
 };

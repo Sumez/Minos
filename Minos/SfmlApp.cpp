@@ -14,25 +14,26 @@ void SfmlApp::Start(void)
 {
 	_graphics = new SfmlGraphics(_window);
 	_audio = new SfmlAudio();
+	_input = new SfmlInput();
 	_graphics->Init();
 	_audio->Init();
 
 	_window.create(sf::VideoMode(1024, 768, 32), "Minos");
-	_window.setPosition(sf::Vector2i(-1400, 200));
-	_window.setSize(sf::Vector2u(400, 300));
+	//_window.setPosition(sf::Vector2i(-1400, 200));
+	_window.setPosition(sf::Vector2i(200, 200));
+	//_window.setSize(sf::Vector2u(400, 300));
 
-	_game = new Game(_graphics, _audio);
+	_game = new Game(_graphics, _audio, _input);
 	auto loaderThread = std::thread(LoadGameData);
 
 	sf::Clock clock = sf::Clock();
-	sf::Time* elapsed;
 	sf::Int64 counter = 0;
+
 	while (!_exit)
 	{
-		elapsed = &clock.getElapsedTime();
-		if (counter + elapsed->asMicroseconds() < 16666) continue;
-		elapsed = &clock.restart();
-		counter = elapsed->asMicroseconds();
+		counter += clock.restart().asMicroseconds();
+		if (counter < 16666) continue;
+		counter -= 16666;
 #ifdef _DEBUG
 		counter = 0; // Prevent "catching up" to slow frames while debugging
 #endif
@@ -45,6 +46,7 @@ void SfmlApp::Start(void)
 
 void SfmlApp::GameLoop()
 {
+	_input->Clear();
 	sf::Event currentEvent;
 	while (_window.pollEvent(currentEvent))
 	{
@@ -53,8 +55,17 @@ void SfmlApp::GameLoop()
 		{
 			_exit = true;
 		}
+
+		if (currentEvent.type == sf::Event::JoystickButtonPressed) _input->PressedJoystickButton(currentEvent.joystickButton.joystickId, currentEvent.joystickButton.button);
+		if (currentEvent.type == sf::Event::JoystickButtonReleased) _input->ReleasedJoystickButton(currentEvent.joystickButton.joystickId, currentEvent.joystickButton.button);
+
+		if (currentEvent.type == sf::Event::MouseButtonPressed) _input->ClickedMouse(currentEvent.mouseButton.button);
+		if (currentEvent.type == sf::Event::MouseButtonReleased) _input->UnclickedMouse(currentEvent.mouseButton.button);
+
+		if (currentEvent.type == sf::Event::KeyReleased) _input->ReleasedKey(currentEvent.key.code);
 		if (currentEvent.type == sf::Event::KeyPressed)
 		{
+			_input->PressedKey(currentEvent.key.code);
 			if (currentEvent.key.alt && currentEvent.key.code == sf::Keyboard::Return) {
 				_window.close();
 				// TODO: Find supported video modes
@@ -64,18 +75,21 @@ void SfmlApp::GameLoop()
 			if (currentEvent.key.code == sf::Keyboard::Escape) _exit = true;
 		}
 	}
-
+	_input->MovedMouse(_window.mapPixelToCoords(sf::Mouse::getPosition(_window)));
 	if (_game->LoadedState == Game::Loading && _loadedGameData) _game->LoadedState = Game::Loaded;
 
 	_game->Update();
 	_window.clear(sf::Color(0, 0, 0));
 	_game->Draw();
 	_window.display();
+
+	if (_game->Exiting) _exit = true;
 }
 
 
 SfmlGraphics* SfmlApp::_graphics = NULL;
 SfmlAudio* SfmlApp::_audio = NULL;
+SfmlInput* SfmlApp::_input = NULL;
 bool SfmlApp::_loadedGameData = false;
 
 bool SfmlApp::_exit = false;

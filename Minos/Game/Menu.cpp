@@ -2,15 +2,16 @@
 #include "../stdafx.h"
 #include "Menu.h"
 
-Menu::Menu(GraphicsAdapter* graphics, AudioAdapter* audio) {
+Menu::Menu(GraphicsAdapter* graphics, AudioAdapter* audio, InputHandler* input) {
 	_graphics = graphics;
 	_audio = audio;
+	_input = input;
 }
 
 void Menu::Update() {
 
 
-	if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+	if (_input->WasMouseButtonClicked(InputHandler::LeftButton)) {
 
 		int hoverMenu = GetHoverMenuItem();
 		if (hoverMenu >= 0) SelectMenuItem(hoverMenu);
@@ -40,11 +41,11 @@ std::vector<int> Menu::GetMenuItemPosition(int index) {
 	return{ x, y, x2, y2 };
 }
 int Menu::GetHoverMenuItem() {
-	auto mPos = _graphics->GetMousePosition();
+	auto mPos = _input->GetMouseCoords();
 	int menuItems = _menuItems.size();
 	for (int i = 0; i < menuItems; i++){
 		auto pos = GetMenuItemPosition(i);
-		if (mPos[0] > pos[0] && mPos[0] < pos[2] && mPos[1] > pos[1] && mPos[1] < pos[3]) return i;
+		if (mPos.x > pos[0] && mPos.x < pos[2] && mPos.y > pos[1] && mPos.y < pos[3]) return i;
 	}
 	return -1;
 }

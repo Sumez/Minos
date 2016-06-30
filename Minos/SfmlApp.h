@@ -2,6 +2,7 @@
 #include "Game\Game.h"
 #include "Sfml/SfmlGraphics.h"
 #include "Sfml/SfmlAudio.h"
+#include "Sfml/SfmlInput.h"
 
 class SfmlApp
 {
@@ -16,6 +17,7 @@ private:
 
 	static SfmlGraphics* _graphics;
 	static SfmlAudio* _audio;
+	static SfmlInput* _input;
 	static bool _loadedGameData;
 
 	static bool _exit;

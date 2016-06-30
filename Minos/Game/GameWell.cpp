@@ -59,6 +59,7 @@ void GameWell::Update() {
 
 	bool rLeft = sf::Keyboard::isKeyPressed(sf::Keyboard::Z);
 	bool rRight = sf::Keyboard::isKeyPressed(sf::Keyboard::X);
+	if (left == right) left = right = false;
 
 	if (rLeft && !_rLeft) { // TODO: check if mino exists
 		rotate = -1;

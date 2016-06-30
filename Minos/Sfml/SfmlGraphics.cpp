@@ -193,16 +193,23 @@ void SfmlGraphics::DrawBackdrop(DisplayGrid* grid) {
 	_rect.setPosition(grid->X, grid->Y + grid->InvisibleRows * grid->CellHeight);
 	_rect.setFillColor(sf::Color(0, 0, 0, 200));
 	_rect.setOutlineThickness(15);
-	_rect.setOutlineColor(sf::Color(255, 255, 255));
+	_rect.setOutlineColor(sf::Color(255, 255, 255,200));
 	_renderTarget->draw(_rect);
 };
 
-void SfmlGraphics::DrawBackground(int index) {
-	_renderTarget->draw(*_backgrounds[index]);
+void SfmlGraphics::DrawRectangle(int x1, int y1, int x2, int y2, unsigned color) {
+	std::vector<sf::Vertex> vertices;
+	auto sfColor = sf::Color(color);
+	vertices.push_back(sf::Vertex(sf::Vector2f(x1, y2), sfColor));
+	vertices.push_back(sf::Vertex(sf::Vector2f(x2, y2), sfColor));
+	vertices.push_back(sf::Vertex(sf::Vector2f(x2, y1), sfColor));
+	vertices.push_back(sf::Vertex(sf::Vector2f(x1, y1), sfColor));
+
+	_renderTarget->draw(&vertices[0], 4, sf::Quads);
 };
 
-std::vector<int> SfmlGraphics::GetMousePosition() {
-	auto hejhej = sf::Mouse::getPosition() - sf::Vector2i(-1394, 231);
-	auto mpos = _renderTarget->mapPixelToCoords(hejhej);
-	return { (int)mpos.x, (int)mpos.y };
-}
+void SfmlGraphics::DrawBackground(int index) {
+	int max = _backgrounds.size() -1;
+	if (max < 0) return;
+	_renderTarget->draw(*_backgrounds[index > max ? max : index]);
+};

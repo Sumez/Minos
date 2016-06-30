@@ -94,6 +94,7 @@
     <ClInclude Include="Game\Randomizer.h" />
     <ClInclude Include="Game\RotationSet.h" />
     <ClInclude Include="Game\Settings.h" />
+    <ClInclude Include="InputHandler.h" />
     <ClInclude Include="SFML-2.3.2\include\SFML\Audio.hpp" />
     <ClInclude Include="SFML-2.3.2\include\SFML\Audio\AlResource.hpp" />
     <ClInclude Include="SFML-2.3.2\include\SFML\Audio\Export.hpp" />
@@ -186,6 +187,7 @@
     <ClInclude Include="SFML-2.3.2\include\SFML\Window\Window.hpp" />
     <ClInclude Include="SFML-2.3.2\include\SFML\Window\WindowHandle.hpp" />
     <ClInclude Include="SFML-2.3.2\include\SFML\Window\WindowStyle.hpp" />
+    <ClInclude Include="Sfml\SfmlInput.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="SfmlApp.h" />
@@ -203,6 +205,7 @@
     <ClCompile Include="Game\RotationSet.cpp" />
     <ClCompile Include="Game\Settings.cpp" />
     <ClCompile Include="Minos.cpp" />
+    <ClCompile Include="Sfml\SfmlInput.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
