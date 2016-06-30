@@ -1,8 +1,10 @@
 #include "stdafx.h"
 #include "../stdafx.h"
-#include "AudioAdapter.h"
+#include "SfmlAudio.h"
 
-void AudioAdapter::Init() {
+void SfmlAudio::Init() {
+};
+void SfmlAudio::LoadGameData() {
 
 	auto blip = new sf::SoundBuffer();
 	blip->loadFromFile("blip.wav");
@@ -29,6 +31,6 @@ void AudioAdapter::Init() {
 	_soundIndex.insert(std::pair<Sounds, sf::Sound*>(Pickup, new sf::Sound(*pickup)));
 };
 
-void AudioAdapter::Play(Sounds sound) {
+void SfmlAudio::Play(Sounds sound) {
 	_soundIndex[sound]->play();
 };

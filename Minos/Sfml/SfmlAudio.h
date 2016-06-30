@@ -1,13 +1,11 @@
 #pragma once
+#include "../AudioAdapter.h"
 
-class AudioAdapter {
+class SfmlAudio : public AudioAdapter {
 
 public:
-	enum Sounds {
-		ReadyStartGo, Blip, Noise, Powerup, Pickup, Tick
-	};
-
 	void Init();
+	void LoadGameData();
 	void Play(Sounds sound);
 
 private:

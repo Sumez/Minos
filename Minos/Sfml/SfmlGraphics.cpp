@@ -2,14 +2,18 @@
 #include "../stdafx.h"
 #include "../Game/DisplayGrid.h"
 #include "../Game/Mino.h"
-#include "GraphicsAdapter.h"
+#include "SfmlGraphics.h"
 
-GraphicsAdapter::GraphicsAdapter(sf::RenderWindow& renderWindow) {
+SfmlGraphics::SfmlGraphics(sf::RenderTarget& renderWindow) {
 	_renderTarget = &renderWindow;
+	_rect = sf::RectangleShape(sf::Vector2f(1, 1));
 };
 
-void GraphicsAdapter::Init() {
-
+void SfmlGraphics::Init() {
+	_font = new sf::Font();
+	_font->loadFromFile("square-deal.ttf");
+};
+void SfmlGraphics::LoadGameData() {
 	auto txTest = new sf::Texture();
 	txTest->loadFromFile("test.jpg");
 	auto sprite = new sf::Sprite();
@@ -24,11 +28,6 @@ void GraphicsAdapter::Init() {
 	MakeColorSprite(MinoColors::Purple, { 0xff00ffff, 0xcc00ccff, 0x770077ff });
 	MakeColorSprite(MinoColors::Gray, { 0xccccccff, 0x999999ff, 0x888888ff });
 
-	_rect = sf::RectangleShape(sf::Vector2f(1, 1));
-
-	_font = new sf::Font();
-	_font->loadFromFile("square-deal.ttf");
-
 	MakeBgSprite("bg1.jpg");
 	MakeBgSprite("bg2.jpg");
 	MakeBgSprite("bg3.jpg");
@@ -36,17 +35,17 @@ void GraphicsAdapter::Init() {
 	MakeBgSprite("bg5.jpg");
 };
 
-void GraphicsAdapter::MakeBgSprite(sf::String filename) {
+void SfmlGraphics::MakeBgSprite(sf::String filename) {
 	auto txBg = new sf::Texture();
 	auto bgSprite = new sf::Sprite();
 	txBg->loadFromFile(filename);
 	bgSprite->setTexture(*txBg);
-	double scale = (double)_renderTarget->getSize().x / bgSprite->getLocalBounds().width;
+	double scale = (double)_renderTarget->getView().getSize().x / bgSprite->getLocalBounds().width;
 	if (scale > 1) bgSprite->setScale(scale, scale);
 	_backgrounds.push_back(bgSprite);
 }
 
-void GraphicsAdapter::MakeColorSprite(MinoColors color, std::vector<unsigned> colorValues)  {
+void SfmlGraphics::MakeColorSprite(MinoColors color, std::vector<unsigned> colorValues)  {
 	auto sprite = sf::Sprite();
 	const int borderWidth = 3;
 	int b2 = 30 - borderWidth;
@@ -83,23 +82,24 @@ void GraphicsAdapter::MakeColorSprite(MinoColors color, std::vector<unsigned> co
 	_colorSprites.insert(std::pair<int, sf::Sprite>(color, sprite));
 };
 
-void GraphicsAdapter::DrawText(std::string text, int x, int y) {
-	auto sfText = sf::Text(text, *_font);
+void SfmlGraphics::DrawText(std::string text, int x, int y, int size, unsigned color) {
+	auto sfText = sf::Text(text, *_font, size);
 	sfText.setPosition(x, y);
+	sfText.setColor(sf::Color(color));
 	_renderTarget->draw(sfText);
 };
 
-void GraphicsAdapter::DrawSprite(sf::Sprite sprite) {
+void SfmlGraphics::DrawSprite(sf::Sprite sprite) {
 	sprite.setPosition(500, 100);
 	_renderTarget->draw(sprite);
 };
 
-void GraphicsAdapter::DrawMino(std::vector<std::vector<int>> coords) {
+void SfmlGraphics::DrawMino(std::vector<std::vector<int>> coords) {
 	for (int i = 0; i < 4; i++) {
 		DrawCell(0, coords[i][0], coords[i][1], Red);
 	};
 };
-void GraphicsAdapter::DrawCell(DisplayGrid* grid, int x, int y, int color, double dark, CellMode modeFlags) {
+void SfmlGraphics::DrawCell(DisplayGrid* grid, int x, int y, int color, double dark, CellMode modeFlags) {
 
 	auto sprite = _colorSprites[color];
 	auto blend = sf::Color(255, 255, 255);
@@ -117,7 +117,7 @@ void GraphicsAdapter::DrawCell(DisplayGrid* grid, int x, int y, int color, doubl
 	sprite.setColor(blend);
 	_renderTarget->draw(sprite);
 };
-void GraphicsAdapter::DrawSymbol(DisplayGrid* grid, Symbol type, double opacity, double scale) {
+void SfmlGraphics::DrawSymbol(DisplayGrid* grid, Symbol type, double opacity, double scale) {
 	sf::String string;
 	switch (type) {
 	case Symbol::One:
@@ -141,7 +141,7 @@ void GraphicsAdapter::DrawSymbol(DisplayGrid* grid, Symbol type, double opacity,
 	_renderTarget->draw(sfText);
 };
 
-void GraphicsAdapter::DrawOutline(DisplayGrid* grid, std::vector<std::vector<int>> buffer) {
+void SfmlGraphics::DrawOutline(DisplayGrid* grid, std::vector<std::vector<int>> buffer) {
 	int bufferSize = buffer.size();
 	std::vector<sf::Vertex> vertices;
 
@@ -188,7 +188,7 @@ void GraphicsAdapter::DrawOutline(DisplayGrid* grid, std::vector<std::vector<int
 	_renderTarget->draw(&vertices[0], vertices.size(), sf::Quads);
 };
 
-void GraphicsAdapter::DrawBackdrop(DisplayGrid* grid) {
+void SfmlGraphics::DrawBackdrop(DisplayGrid* grid) {
 	_rect.setSize(sf::Vector2f(grid->CellWidth * grid->Width, grid->CellHeight * (grid->Height - grid->InvisibleRows)));
 	_rect.setPosition(grid->X, grid->Y + grid->InvisibleRows * grid->CellHeight);
 	_rect.setFillColor(sf::Color(0, 0, 0, 200));
@@ -197,6 +197,12 @@ void GraphicsAdapter::DrawBackdrop(DisplayGrid* grid) {
 	_renderTarget->draw(_rect);
 };
 
-void GraphicsAdapter::DrawBackground(int index) {
+void SfmlGraphics::DrawBackground(int index) {
 	_renderTarget->draw(*_backgrounds[index]);
 };
+
+std::vector<int> SfmlGraphics::GetMousePosition() {
+	auto hejhej = sf::Mouse::getPosition() - sf::Vector2i(-1394, 231);
+	auto mpos = _renderTarget->mapPixelToCoords(hejhej);
+	return { (int)mpos.x, (int)mpos.y };
+}

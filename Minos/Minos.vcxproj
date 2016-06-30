@@ -83,8 +83,13 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AudioAdapter.h" />
     <ClInclude Include="Game\DisplayGrid.h" />
     <ClInclude Include="Game\Game.h" />
+    <ClInclude Include="Game\GameWell.h" />
+    <ClInclude Include="Game\MainMenu.h" />
+    <ClInclude Include="Game\Menu.h" />
+    <ClInclude Include="GraphicsAdapter.h" />
     <ClInclude Include="Game\Mino.h" />
     <ClInclude Include="Game\Randomizer.h" />
     <ClInclude Include="Game\RotationSet.h" />
@@ -183,13 +188,16 @@
     <ClInclude Include="SFML-2.3.2\include\SFML\Window\WindowStyle.hpp" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
-    <ClInclude Include="WindowsApp.h" />
-    <ClInclude Include="Windows\AudioAdapter.h" />
-    <ClInclude Include="Windows\GraphicsAdapter.h" />
+    <ClInclude Include="SfmlApp.h" />
+    <ClInclude Include="Sfml\SfmlAudio.h" />
+    <ClInclude Include="Sfml\SfmlGraphics.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Game\DisplayGrid.cpp" />
     <ClCompile Include="Game\Game.cpp" />
+    <ClCompile Include="Game\GameWell.cpp" />
+    <ClCompile Include="Game\MainMenu.cpp" />
+    <ClCompile Include="Game\Menu.cpp" />
     <ClCompile Include="Game\Mino.cpp" />
     <ClCompile Include="Game\Randomizer.cpp" />
     <ClCompile Include="Game\RotationSet.cpp" />
@@ -199,9 +207,9 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="WindowsApp.cpp" />
-    <ClCompile Include="Windows\AudioAdapter.cpp" />
-    <ClCompile Include="Windows\GraphicsAdapter.cpp" />
+    <ClCompile Include="SfmlApp.cpp" />
+    <ClCompile Include="Sfml\SfmlAudio.cpp" />
+    <ClCompile Include="Sfml\SfmlGraphics.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="SFML-2.3.2\include\SFML\Audio\SoundFileFactory.inl" />

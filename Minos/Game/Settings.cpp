@@ -57,7 +57,8 @@ void Settings::SetLevel(int level) {
 	else if (level >= 35) _gravity = 8;
 	else if (level >= 30) _gravity = 6;
 	else if (level >= 0) _gravity = 4;
-	else _gravity = 0;
+	else _gravity = 0;
+
 	_are = _lineAre = 25;
 	if (level >= 801) _are = 12;
 	else if (level >= 701) _are = 16;
@@ -66,7 +67,9 @@ void Settings::SetLevel(int level) {
 	else if (level >= 701) _lineAre = 12;
 	else if (level >= 601) _lineAre = 16;
 
-	_lockDelay = level >= 901 ? 17 : 30;	if (level >= 801) _lineClearDelay = 6;
+	_lockDelay = level >= 901 ? 17 : 30;
+
+	if (level >= 801) _lineClearDelay = 6;
 	else if(level >= 701) _lineClearDelay = 12;
 	else if(level >= 601) _lineClearDelay = 16;
 	else if(level >= 500) _lineClearDelay = 25;
