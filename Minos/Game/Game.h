@@ -20,6 +20,8 @@ public:
 	LoadedStates LoadedState = Loading;
 
 private:
+	void CloseMenu();
+
 	GraphicsAdapter* _graphics;
 	AudioAdapter* _audio;
 	InputHandler* _input;

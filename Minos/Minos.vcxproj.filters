@@ -348,6 +348,9 @@
     <ClInclude Include="Sfml\SfmlInput.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Game\ControlConfigMenu.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -393,6 +396,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Sfml\SfmlInput.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Game\ControlConfigMenu.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

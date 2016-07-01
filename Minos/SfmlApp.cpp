@@ -19,9 +19,8 @@ void SfmlApp::Start(void)
 	_audio->Init();
 
 	_window.create(sf::VideoMode(1024, 768, 32), "Minos");
-	//_window.setPosition(sf::Vector2i(-1400, 200));
-	_window.setPosition(sf::Vector2i(200, 200));
-	//_window.setSize(sf::Vector2u(400, 300));
+	_window.setPosition(sf::Vector2i(-1400, 200));
+	_window.setSize(sf::Vector2u(400, 300));
 
 	_game = new Game(_graphics, _audio, _input);
 	auto loaderThread = std::thread(LoadGameData);
@@ -72,7 +71,6 @@ void SfmlApp::GameLoop()
 				_window.create(sf::VideoMode(1024, 768, 32), "Minos", sf::Style::Fullscreen);
 				_window.setMouseCursorVisible(false);
 			}
-			if (currentEvent.key.code == sf::Keyboard::Escape) _exit = true;
 		}
 	}
 	_input->MovedMouse(_window.mapPixelToCoords(sf::Mouse::getPosition(_window)));

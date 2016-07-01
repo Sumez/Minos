@@ -7,6 +7,10 @@ public:
 	virtual Coords GetMouseCoords();
 	virtual bool WasMouseButtonClicked(MouseButton button);
 	virtual bool IsMouseButtonHeld(MouseButton button);
+	virtual void BindControl(ControlButton button);
+	virtual void CancelBind() { _binding = false; }
+	virtual bool IsWaitingForBind(ControlButton button) { return _binding; } // TODO
+	virtual std::string GetInputFor(ControlButton button);
 
 	void PressedKey(int key);
 	void ReleasedKey(int key);
@@ -19,6 +23,14 @@ public:
 	void MovedMouse(sf::Vector2f coords);
 
 private:
+
+	bool _binding = false;
+	ControlButton _bindingControl;
+
+	std::map<int, ControlButton> _mappings;
+	std::map<ControlButton, int> _reverseMappings;
+
+
 	std::map<int, bool> _isPressed;
 	std::vector<int> _justPressed;
 

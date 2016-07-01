@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "../stdafx.h"
 #include "MainMenu.h"
+#include "ControlConfigMenu.h"
 #include "Game.h"
 
 Game::Game(GraphicsAdapter* graphics, AudioAdapter* audio, InputHandler* input) {
@@ -9,7 +10,7 @@ Game::Game(GraphicsAdapter* graphics, AudioAdapter* audio, InputHandler* input) 
 	_input = input;
 
 	auto mainMenu = new MainMenu(graphics, audio, input);
-	mainMenu->Add(MenuItem("Begin game", [&,this]() -> void {
+	mainMenu->Add(new MenuItem("Begin game", [&,this]() -> void {
 		if (LoadedState != Loaded) return;
 		auto newWell = new GameWell(_graphics, _audio);
 		newWell->Init();
@@ -17,12 +18,24 @@ Game::Game(GraphicsAdapter* graphics, AudioAdapter* audio, InputHandler* input) 
 		_activeMenus.erase(_activeMenus.begin());
 	}));
 
-	mainMenu->Add(MenuItem("Configuration", []() -> void {}));
-	mainMenu->Add(MenuItem("Exit", [this]() -> void { Exiting = true; }));
+	mainMenu->Add(new MenuItem("Configuration", [this]() -> void {
+		auto configMenu = new Menu(_graphics, _audio, _input);
+		configMenu->Add(new MenuItem("Controls", [this]() -> void {
+			auto controlConfigMenu = new ControlConfigMenu(_graphics, _audio, _input);
+			controlConfigMenu->Add(new MenuItem("Back", [this]() -> void { CloseMenu(); }));
+			_activeMenus.push_back(controlConfigMenu);
+		}));
+		configMenu->Add(new MenuItem("Back", [this]() -> void { CloseMenu(); }));
+		_activeMenus.push_back(configMenu);
+	}));
+	mainMenu->Add(new MenuItem("Exit", [this]() -> void { Exiting = true; }));
 
 	_activeMenus.push_back(mainMenu);
 }
 
+void Game::CloseMenu() {
+	_activeMenus.pop_back();
+}
 
 void Game::Update() {
 	int wells = _activeWells.size();
@@ -30,7 +43,7 @@ void Game::Update() {
 		_activeWells[i]->Update();
 	}
 
-	if (!_activeMenus.empty()) _activeMenus[0]->Update();
+	if (!_activeMenus.empty()) _activeMenus[_activeMenus.size() - 1]->Update();
 }
 void Game::Draw() {
 	int wells = _activeWells.size();
