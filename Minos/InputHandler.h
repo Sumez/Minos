@@ -18,6 +18,8 @@ public:
 		LeftButton, RightButton
 	};
 
+	virtual bool IsHolding(ControlButton button) = 0;
+
 	virtual bool WasMouseButtonClicked(MouseButton button) = 0;
 	virtual bool IsMouseButtonHeld(MouseButton button) = 0;
 	virtual Coords GetMouseCoords() = 0;

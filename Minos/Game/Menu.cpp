@@ -28,18 +28,21 @@ void Menu::Draw() {
 
 	_graphics->DrawRectangle(topPos[0], topPos[1], bottomPos[2], bottomPos[3], 0x000000cc);
 
+	int menuHeight = Style == Small ? 30 : 100;
 	for (int i = 0; i < menuItems; i++){
 		auto pos = GetMenuItemPosition(i);
-		_graphics->DrawText(_menuItems[i]->Text, pos[0], pos[1], 100, i == _activeMenuIndex ? 0x88ff00ff : 0xffffffff);
+		_graphics->DrawText(_menuItems[i]->Text, pos[0], pos[1], menuHeight, i == _activeMenuIndex ? 0x88ff00ff : 0xffffffff);
 	}
 }
 std::vector<int> Menu::GetMenuItemPosition(int index) {
 	// TODO: Proper dynamic positioning of menus etc.
+	int menuHeight = Style == Small ? 50 : 120;
+	int menuSpacing = Style == Small ? 50 : 120;
 
 	int x = 100;
 	int x2 = 700;
-	int y = 100 + index * 120;
-	int y2 = 200 + index * 120;
+	int y = 100 + index * menuSpacing;
+	int y2 = 100 + menuHeight + index * menuSpacing;
 
 	return{ x, y, x2, y2 };
 }

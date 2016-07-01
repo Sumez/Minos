@@ -12,7 +12,7 @@ Game::Game(GraphicsAdapter* graphics, AudioAdapter* audio, InputHandler* input) 
 	auto mainMenu = new MainMenu(graphics, audio, input);
 	mainMenu->Add(new MenuItem("Begin game", [&,this]() -> void {
 		if (LoadedState != Loaded) return;
-		auto newWell = new GameWell(_graphics, _audio);
+		auto newWell = new GameWell(_graphics, _audio, _input);
 		newWell->Init();
 		_activeWells.push_back(newWell);
 		_activeMenus.erase(_activeMenus.begin());
@@ -22,6 +22,7 @@ Game::Game(GraphicsAdapter* graphics, AudioAdapter* audio, InputHandler* input) 
 		auto configMenu = new Menu(_graphics, _audio, _input);
 		configMenu->Add(new MenuItem("Controls", [this]() -> void {
 			auto controlConfigMenu = new ControlConfigMenu(_graphics, _audio, _input);
+			controlConfigMenu->Style = Menu::Small;
 			controlConfigMenu->Add(new MenuItem("Back", [this]() -> void { CloseMenu(); }));
 			_activeMenus.push_back(controlConfigMenu);
 		}));

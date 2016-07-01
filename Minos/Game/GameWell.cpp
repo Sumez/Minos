@@ -6,9 +6,10 @@
 GameWell::GameWell() {
 
 }
-GameWell::GameWell(GraphicsAdapter* graphics, AudioAdapter* audio) {
+GameWell::GameWell(GraphicsAdapter* graphics, AudioAdapter* audio, InputHandler* input) {
 	_graphics = graphics;
 	_audio = audio;
+	_input = input;
 }
 
 void GameWell::Init() {
@@ -51,14 +52,14 @@ void GameWell::Update() {
 	int moveX = 0;
 	int moveY = 0;
 
-	bool left = sf::Keyboard::isKeyPressed(sf::Keyboard::Left);
-	bool right = sf::Keyboard::isKeyPressed(sf::Keyboard::Right);
-	bool softDrop = sf::Keyboard::isKeyPressed(sf::Keyboard::Down);
-	bool sonicDrop = sf::Keyboard::isKeyPressed(sf::Keyboard::Up);
-	bool hardDrop = sf::Keyboard::isKeyPressed(sf::Keyboard::Space);
+	bool left = _input->IsHolding(InputHandler::P1Left);
+	bool right = _input->IsHolding(InputHandler::P1Right);
+	bool softDrop = _input->IsHolding(InputHandler::P1SoftDrop);
+	bool sonicDrop = _input->IsHolding(InputHandler::P1SonicDrop);
+	bool hardDrop = _input->IsHolding(InputHandler::P1HardDrop);
 
-	bool rLeft = sf::Keyboard::isKeyPressed(sf::Keyboard::Z);
-	bool rRight = sf::Keyboard::isKeyPressed(sf::Keyboard::X);
+	bool rLeft = _input->IsHolding(InputHandler::P1RotateLeft);
+	bool rRight = _input->IsHolding(InputHandler::P1RotateRight);
 	if (left == right) left = right = false;
 
 	if (rLeft && !_rLeft) { // TODO: check if mino exists

@@ -1,6 +1,7 @@
 #pragma once
 #include "../GraphicsAdapter.h"
 #include "../AudioAdapter.h"
+#include "../InputHandler.h"
 #include "Mino.h"
 #include "Randomizer.h"
 #include "DisplayGrid.h"
@@ -10,7 +11,7 @@ class GameWell {
 
 public:
 	
-	GameWell(GraphicsAdapter* graphics, AudioAdapter* audio);
+	GameWell(GraphicsAdapter* graphics, AudioAdapter* audio, InputHandler* _input);
 	GameWell();
 	void Init();
 	void Update();
@@ -49,6 +50,7 @@ private:
 	Randomizer _randomizer;
 	GraphicsAdapter* _graphics;
 	AudioAdapter* _audio;
+	InputHandler* _input;
 	Mino _currentMino;
 	Settings _settings;
 

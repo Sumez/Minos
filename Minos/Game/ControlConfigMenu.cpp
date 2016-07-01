@@ -19,7 +19,7 @@ void ControlConfigMenu::BeginBinding(InputHandler::ControlButton button, ConfigM
 	menuItem->SetValue("setting...");
 
 	if (_bindingItem != NULL) {
-		_bindingItem->SetValue("");
+		_bindingItem->SetValue(_input->GetInputFor(_bindingButton));
 	}
 
 	_bindingItem = menuItem;
@@ -27,9 +27,10 @@ void ControlConfigMenu::BeginBinding(InputHandler::ControlButton button, ConfigM
 }
 
 void ControlConfigMenu::AddItem(std::string name, InputHandler::ControlButton button) {
-	ConfigMenuItem* configButton = new ConfigMenuItem(button, name, [&]() -> void { }); // TODO: destruct/clear memory!
+	ConfigMenuItem* configButton = new ConfigMenuItem(name, [&]() -> void { }); // TODO: destruct/clear memory!
+	configButton->SetValue(_input->GetInputFor(button));
 	configButton->SetAction([=]() -> void { BeginBinding(button, configButton); });
-	AddConfig(button, configButton);
+	AddConfig(configButton);
 }
 
 void ControlConfigMenu::Update() {

@@ -18,20 +18,23 @@ private:
 	std::string _name;
 	std::string _value;
 public: 
-	int Id;
 	void SetValue(std::string value);
-	ConfigMenuItem(int id, std::string name, std::function<void()> action, std::string value = "") : MenuItem(name, action), Id(id), _name(name) { SetValue(value); };
+	ConfigMenuItem(std::string name, std::function<void()> action, std::string value = "") : MenuItem(name, action), _name(name) { SetValue(value); };
 };
 
 class Menu {
 public:
+	enum MenuStyle {
+		Large, Small
+	};
+	
 	Menu(GraphicsAdapter* graphics, AudioAdapter* audio, InputHandler* input);
 	virtual void SelectMenuItem(int index);
 	virtual void Update();
 	virtual void Draw();
 	virtual void Add(MenuItem* menuItem) { _menuItems.push_back(menuItem); };
-	virtual void AddConfig(int id, ConfigMenuItem* menuItem) { Add(menuItem); _configItems.push_back(menuItem); };
-
+	virtual void AddConfig(ConfigMenuItem* menuItem) { Add(menuItem); _configItems.push_back(menuItem); };
+	MenuStyle Style = Large;
 protected:
 	std::vector<MenuItem*> _menuItems;
 	std::vector<ConfigMenuItem*> _configItems;

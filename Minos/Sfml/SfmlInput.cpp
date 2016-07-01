@@ -1,7 +1,78 @@
 #include "stdafx.h"
+#include <sstream>
+#include <iostream>
+#include <fstream>
 #include "../stdafx.h"
 #include "SfmlInput.h"
-const char *getKeyName(const sf::Keyboard::Key key) {
+#include <ShlObj.h>
+#include <Windows.h>
+
+std::wstring ConfigFile() {
+	std::wstringstream ss;
+	TCHAR path[MAX_PATH];
+	// Get path for each computer, non-user specific and non-roaming data.
+	if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_COMMON_APPDATA, NULL, 0, path)))
+	{
+		// Append product-specific path
+		//PathAppend(path, _T("\\My Company\\My Product\\1.0\\"));
+		ss << path << "\\Minos\\";
+		CreateDirectory(ss.str().c_str(), NULL);
+	}
+	ss << "settings.cfg";
+	return ss.str();
+}
+
+void SaveSettings(std::map<InputHandler::ControlButton, uint64_t> map) {
+	std::ofstream file;
+	errno = 0;
+	file.open(ConfigFile(), std::ios::out | std::ios::trunc | std::ios::binary);
+	if (errno) return;
+	char mapSize = map.size();
+	file.write(&mapSize, 1);
+	char buffer[12];
+	for (auto const &mapping : map) {
+		uint32_t button = mapping.first;
+		uint64_t keyId = mapping.second;
+		file.write((char*)&button, 4);
+		file.write((char*)&keyId, 8);
+	}
+	for (int i = 0; i < mapSize; i++) {
+		;
+	}
+	file.close();
+}
+std::map<InputHandler::ControlButton, uint64_t> LoadSettings() {
+	std::map<InputHandler::ControlButton, uint64_t> map;
+	std::fstream file;
+	errno = 0;
+	file.open(ConfigFile(), std::ios::in | std::ios::binary);
+	if (errno) return map;
+	char mapSize = map.size();
+	file.read(&mapSize, 1);
+	char buffer[12];
+	for (int i = 0; i < mapSize; i++) {
+		uint32_t button;
+		uint64_t keyId;
+		file.read((char*)&button, 4);
+		file.read((char*)&keyId, 8);
+		map[static_cast<InputHandler::ControlButton>(button)] = keyId;
+	}
+	file.close();
+	return map;
+}
+std::string getJoystickButtonName(int joystickIndex, int button) {
+	std::stringstream ss;
+	ss << "Joystick" << std::to_string(joystickIndex + 1) << " ";
+
+	if (button == 101) ss << "Left";
+	else if (button == 102) ss << "Right";
+	else if (button == 103) ss << "Down";
+	else if (button == 104) ss << "Up";
+	else ss << "Button" << std::to_string(button);
+
+	return ss.str();
+}
+std::string getKeyName(const sf::Keyboard::Key key) {
 	switch (key) {
 	default:
 	case sf::Keyboard::Unknown:
@@ -211,24 +282,61 @@ const char *getKeyName(const sf::Keyboard::Key key) {
 	}
 }
 
+uint64_t combine64(uint32_t i1, uint32_t i2) {
+	return (uint64_t)i1 << 32 | i2;
+}
+std::vector<uint32_t> split64(uint64_t i) {
+	return{ (uint32_t)(i >> 32), (uint32_t)i };
+}
 
-void SfmlInput::PressedKey(int key) {
+void SfmlInput::Load() {
+	_reverseMappings = LoadSettings();
+}
+void SfmlInput::PressedKeyId(uint64_t keyId) {
 	if (_binding) {
-		_mappings[key] = _bindingControl;
-		_reverseMappings[_bindingControl] = key;
+		_mappings[keyId] = _bindingControl;
+		_reverseMappings[_bindingControl] = keyId;
 		_binding = false;
+
+		SaveSettings(_reverseMappings);
 	}
 
-	if (!_isPressed.count(key) || !_isPressed[key]) _justPressed.push_back(key);
-	_isPressed[key] = true;
+	if (!_isPressed.count(keyId) || !_isPressed[keyId]) _justPressed.push_back(keyId);
+	_isPressed[keyId] = true;
 }
-void SfmlInput::ReleasedKey(int key) {
-	_isPressed[key] = false;
+void SfmlInput::ReleasedKeyId(uint64_t keyId) {
+	_isPressed[keyId] = false;
 }
-void SfmlInput::PressedJoystickButton(int stickId, int key) {
+void SfmlInput::PressedKey(uint32_t key) {
+	PressedKeyId(combine64(100, key));
 }
-void SfmlInput::ReleasedJoystickButton(int stickId, int key) {
+void SfmlInput::ReleasedKey(uint32_t key) {
+	ReleasedKeyId(combine64(100, key));
+}
+void SfmlInput::MovedJoystick(uint32_t stickId, sf::Joystick::Axis axis, float amount) {
+	if (amount <= -100 && axis == sf::Joystick::PovX)
+		PressedJoystickButton(stickId, 101);
+	if (amount >= 100 && axis == sf::Joystick::PovX)
+		PressedJoystickButton(stickId, 102);
+	if (amount <= -100 && axis == sf::Joystick::PovY)
+		PressedJoystickButton(stickId, 103);
+	if (amount >= 100 && axis == sf::Joystick::PovY)
+		PressedJoystickButton(stickId, 104);
 
+	if (amount > -100 && axis == sf::Joystick::PovX)
+		ReleasedJoystickButton(stickId, 101);
+	if (amount < 100 && axis == sf::Joystick::PovX)
+		ReleasedJoystickButton(stickId, 102);
+	if (amount > -100 && axis == sf::Joystick::PovY)
+		ReleasedJoystickButton(stickId, 103);
+	if (amount < 100 && axis == sf::Joystick::PovY)
+		ReleasedJoystickButton(stickId, 104);
+}
+void SfmlInput::PressedJoystickButton(uint32_t stickId, uint32_t button) {
+	PressedKeyId(combine64(stickId, button));
+}
+void SfmlInput::ReleasedJoystickButton(uint32_t stickId, uint32_t button) {
+	ReleasedKeyId(combine64(stickId, button));
 }
 void SfmlInput::ClickedMouse(int key) {
 	if (!_isClicked.count(key) || !_isClicked[key]) _justClicked.push_back(key);
@@ -251,12 +359,17 @@ Coords SfmlInput::GetMouseCoords() {
 bool SfmlInput::WasMouseButtonClicked(MouseButton button) {
 	return std::find(_justClicked.begin(), _justClicked.end(), button == LeftButton ? 0 : button == RightButton ? 1 : 2) != _justClicked.end();
 }
+bool SfmlInput::IsHolding(ControlButton button) {
+	auto keyId = _reverseMappings[button];
+	return _isPressed.count(keyId) && _isPressed[keyId];
+}
 bool SfmlInput::IsMouseButtonHeld(MouseButton button) {
-	return false;
+	return _isClicked.count(button) && _isClicked[button];
 }
 std::string SfmlInput::GetInputFor(ControlButton button) {
-	auto inputIndex = _reverseMappings[button];
-	return getKeyName(static_cast<sf::Keyboard::Key>(inputIndex));
+	auto inputIndex = split64(_reverseMappings[button]);
+	return inputIndex[0] == 100 ? getKeyName(static_cast<sf::Keyboard::Key>(inputIndex[1]))
+		: getJoystickButtonName(inputIndex[0], inputIndex[1]);
 }
 
 void SfmlInput::BindControl(ControlButton button) {

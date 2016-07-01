@@ -15,12 +15,13 @@ void SfmlApp::Start(void)
 	_graphics = new SfmlGraphics(_window);
 	_audio = new SfmlAudio();
 	_input = new SfmlInput();
+	_input->Load();
 	_graphics->Init();
 	_audio->Init();
 
 	_window.create(sf::VideoMode(1024, 768, 32), "Minos");
-	_window.setPosition(sf::Vector2i(-1400, 200));
-	_window.setSize(sf::Vector2u(400, 300));
+	//_window.setPosition(sf::Vector2i(-1400, 200));
+	//_window.setSize(sf::Vector2u(400, 300));
 
 	_game = new Game(_graphics, _audio, _input);
 	auto loaderThread = std::thread(LoadGameData);
@@ -50,27 +51,41 @@ void SfmlApp::GameLoop()
 	while (_window.pollEvent(currentEvent))
 	{
 
-		if (currentEvent.type == sf::Event::Closed)
+		switch (currentEvent.type)
 		{
+		case sf::Event::JoystickMoved:
+			_input->MovedJoystick(currentEvent.joystickMove.joystickId, currentEvent.joystickMove.axis, currentEvent.joystickMove.position);
+			break;
+		case sf::Event::JoystickButtonPressed:
+			_input->PressedJoystickButton(currentEvent.joystickButton.joystickId, currentEvent.joystickButton.button);
+			break;
+		case sf::Event::JoystickButtonReleased:
+			_input->ReleasedJoystickButton(currentEvent.joystickButton.joystickId, currentEvent.joystickButton.button);
+			break;
+		case sf::Event::MouseButtonPressed:
+			_input->ClickedMouse(currentEvent.mouseButton.button);
+			break;
+		case sf::Event::MouseButtonReleased:
+			_input->UnclickedMouse(currentEvent.mouseButton.button);
+			break;
+		case sf::Event::KeyPressed:
+			_input->PressedKey(currentEvent.key.code);
+			break;
+		case sf::Event::KeyReleased:
+			_input->ReleasedKey(currentEvent.key.code);
+			break;
+
+		case sf::Event::Closed:
 			_exit = true;
+			break;
 		}
 
-		if (currentEvent.type == sf::Event::JoystickButtonPressed) _input->PressedJoystickButton(currentEvent.joystickButton.joystickId, currentEvent.joystickButton.button);
-		if (currentEvent.type == sf::Event::JoystickButtonReleased) _input->ReleasedJoystickButton(currentEvent.joystickButton.joystickId, currentEvent.joystickButton.button);
-
-		if (currentEvent.type == sf::Event::MouseButtonPressed) _input->ClickedMouse(currentEvent.mouseButton.button);
-		if (currentEvent.type == sf::Event::MouseButtonReleased) _input->UnclickedMouse(currentEvent.mouseButton.button);
-
-		if (currentEvent.type == sf::Event::KeyReleased) _input->ReleasedKey(currentEvent.key.code);
-		if (currentEvent.type == sf::Event::KeyPressed)
+		if (currentEvent.type == sf::Event::KeyPressed && currentEvent.key.alt && currentEvent.key.code == sf::Keyboard::Return)
 		{
-			_input->PressedKey(currentEvent.key.code);
-			if (currentEvent.key.alt && currentEvent.key.code == sf::Keyboard::Return) {
-				_window.close();
-				// TODO: Find supported video modes
-				_window.create(sf::VideoMode(1024, 768, 32), "Minos", sf::Style::Fullscreen);
-				_window.setMouseCursorVisible(false);
-			}
+			_window.close();
+			// TODO: Find supported video modes
+			_window.create(sf::VideoMode(1024, 768, 32), "Minos", sf::Style::Fullscreen);
+			//_window.setMouseCursorVisible(false);
 		}
 	}
 	_input->MovedMouse(_window.mapPixelToCoords(sf::Mouse::getPosition(_window)));
