@@ -7,12 +7,16 @@ public:
 
 	virtual Coords GetMouseCoords();
 	virtual bool IsHolding(ControlButton button);
+	virtual bool JustPressed(ControlButton button);
 	virtual bool WasMouseButtonClicked(MouseButton button);
 	virtual bool IsMouseButtonHeld(MouseButton button);
 	virtual void BindControl(ControlButton button);
 	virtual void CancelBind() { _binding = false; }
 	virtual bool IsWaitingForBind(ControlButton button) { return _binding; } // TODO
 	virtual std::string GetInputFor(ControlButton button);
+	virtual void AdvanceFrame();
+	virtual void BeginRecording();
+	virtual std::vector<std::vector<ControlButton>>& GetRecording() { return _recording; }
 
 	void Load();
 	void PressedKey(uint32_t key);
@@ -33,16 +37,18 @@ private:
 
 	bool _binding = false;
 	ControlButton _bindingControl;
+	
+	std::map<uint64_t, std::vector<ControlButton>> _mappings;
+	std::map<ControlButton, std::vector<uint64_t>> _reverseMappings;
+	
 
-	std::map<uint64_t, ControlButton> _mappings;
-	std::map<ControlButton, uint64_t> _reverseMappings;
-
-
-	std::map<uint64_t, bool> _isPressed;
-	std::vector<uint64_t> _justPressed;
+	std::map<ControlButton, bool> _isPressed;
+	std::vector<ControlButton> _justPressed;
 
 	std::map<int, bool> _isClicked;
 	std::vector<int> _justClicked;
 
 	sf::Vector2f _mouseCoords;
+
+	std::vector<std::vector<ControlButton>> _recording;
 };

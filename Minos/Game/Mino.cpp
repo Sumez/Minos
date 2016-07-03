@@ -5,57 +5,54 @@
 
 std::map<Mino::MinoType, RotationSet> rotationSystem;
 
-Mino::Mino() {
-};
-Mino::Mino(MinoType type) {
-
+void loadRotations() {
 	RotationSet tRotation;
 	tRotation.Rotations = {
-		{{-1, 0}, {0, 0}, {1, 0}, {0, 1}},
-		{{0, -1}, {0, 0}, {0, 1}, {-1, 0}},
-		{{1, 1}, {0, 1}, {-1, 1}, {0, 0}},
-		{{0, 1}, {0, 0}, {0, -1}, {1, 0}}
+		{ { -1, 0 }, { 0, 0 }, { 1, 0 }, { 0, 1 } },
+		{ { 0, -1 }, { 0, 0 }, { 0, 1 }, { -1, 0 } },
+		{ { 1, 1 }, { 0, 1 }, { -1, 1 }, { 0, 0 } },
+		{ { 0, 1 }, { 0, 0 }, { 0, -1 }, { 1, 0 } }
 
 	};
 	RotationSet iRotation;
 	iRotation.Rotations = {
-		{{-1, 0}, {0, 0}, {1, 0}, {2, 0}},
-		{{1, -1}, {1, 0}, {1, 1}, {1, 2}}
+		{ { -1, 0 }, { 0, 0 }, { 1, 0 }, { 2, 0 } },
+		{ { 1, -1 }, { 1, 0 }, { 1, 1 }, { 1, 2 } }
 	};
 	iRotation.RotationCount = 2;
 	iRotation.SimpleWallkick = false;
 
 	RotationSet lRotation;
 	lRotation.Rotations = {
-		{{-1, 0}, {0, 0}, {1, 0}, {-1, 1}},
-		{{0, -1}, {0, 0}, {0, 1}, {-1, -1}},
-		{{1, 1}, {0, 1}, {-1, 1}, {1, 0}},
-		{{0, 1}, {0, 0}, {0, -1}, {1, 1}}
+		{ { -1, 0 }, { 0, 0 }, { 1, 0 }, { -1, 1 } },
+		{ { 0, -1 }, { 0, 0 }, { 0, 1 }, { -1, -1 } },
+		{ { 1, 1 }, { 0, 1 }, { -1, 1 }, { 1, 0 } },
+		{ { 0, 1 }, { 0, 0 }, { 0, -1 }, { 1, 1 } }
 	};
 	RotationSet jRotation;
 	jRotation.Rotations = {
-		{{-1, 0}, {0, 0}, {1, 0}, {1, 1}},
-		{{0, -1}, {0, 0}, {0, 1}, {-1, 1}},
-		{{1, 1}, {0, 1}, {-1, 1}, {-1, 0}},
-		{{0, 1}, {0, 0}, {0, -1}, {1, -1}}
+		{ { -1, 0 }, { 0, 0 }, { 1, 0 }, { 1, 1 } },
+		{ { 0, -1 }, { 0, 0 }, { 0, 1 }, { -1, 1 } },
+		{ { 1, 1 }, { 0, 1 }, { -1, 1 }, { -1, 0 } },
+		{ { 0, 1 }, { 0, 0 }, { 0, -1 }, { 1, -1 } }
 	};
 	RotationSet oRotation;
 	oRotation.Rotations = {
-		{{-1, 0}, {0, 0}, {-1, 1}, {0, 1}}
+		{ { -1, 0 }, { 0, 0 }, { -1, 1 }, { 0, 1 } }
 	};
 	oRotation.RotationCount = 1;
 
 	RotationSet sRotation;
 	sRotation.Rotations = {
-		{{1, 0}, {0, 0}, {0, 1}, {-1, 1}},
-		{{-1, -1}, {-1, 0}, {0, 0}, {0, 1}}
+		{ { 1, 0 }, { 0, 0 }, { 0, 1 }, { -1, 1 } },
+		{ { -1, -1 }, { -1, 0 }, { 0, 0 }, { 0, 1 } }
 	};
 	sRotation.RotationCount = 2;
 
 	RotationSet zRotation;
 	zRotation.Rotations = {
-		{{-1, 0}, {0, 0}, {0, 1}, {1, 1}},
-		{{1, -1}, {1, 0}, {0, 0}, {0, 1}}
+		{ { -1, 0 }, { 0, 0 }, { 0, 1 }, { 1, 1 } },
+		{ { 1, -1 }, { 1, 0 }, { 0, 0 }, { 0, 1 } }
 	};
 	zRotation.RotationCount = 2;
 
@@ -66,8 +63,13 @@ Mino::Mino(MinoType type) {
 	rotationSystem.insert(std::pair<Mino::MinoType, RotationSet>(Mino::MinoType::O, oRotation));
 	rotationSystem.insert(std::pair<Mino::MinoType, RotationSet>(Mino::MinoType::S, sRotation));
 	rotationSystem.insert(std::pair<Mino::MinoType, RotationSet>(Mino::MinoType::Z, zRotation));
+};
 
+Mino::Mino() {
+};
+Mino::Mino(MinoType type) {
 
+	if (!rotationSystem.count(type)) loadRotations();
 	_rotations = &rotationSystem[type];
 
 	SimpleWallkick = _rotations->SimpleWallkick;

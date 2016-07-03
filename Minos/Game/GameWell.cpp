@@ -12,18 +12,25 @@ GameWell::GameWell(GraphicsAdapter* graphics, AudioAdapter* audio, InputHandler*
 	_input = input;
 }
 
-void GameWell::Init() {
+std::vector<int>* GameWell::GetSequence() {
+	return _randomizer.GetSequence();
+}
+
+void GameWell::Init(std::vector<int>* sequence) {
 	
-	_randomizer = Randomizer();
+	_randomizer = Randomizer(sequence);
 	_grid = std::vector<std::vector<int>>(22, std::vector<int>(10));
 	_rowsToClear = std::vector<int>(0);
 	_firstMino = true;
+	_frame = 0;
+	_input->BeginRecording();
 	_level = 0;
 	_settings.SetLevel(0);
 	_score = 0;
 	_totalLines = 0;
 	spawnTimer = 120;
 	lineClearTimer = -1;
+	UpdatePreview();
 
 	_gameGrid = DisplayGrid();
 	_gameGrid.X = 100;
@@ -112,6 +119,7 @@ void GameWell::Update() {
 
 		if (spawnTimer == 0) {
 			SpawnMino(_randomizer.GetMino());
+			UpdatePreview();
 			spawnTimer = -1;
 		}
 	}
@@ -134,6 +142,10 @@ void GameWell::Update() {
 	int numSymbols = _symbols.size();
 	for (int i = 0; i < numSymbols; i++) _symbols[i].Timer++;
 	while (!_symbols.empty() && _symbols[0].Timer >= 40) _symbols.erase(_symbols.begin()); // Assumes the first symbol is always the oldest
+
+
+	_input->AdvanceFrame();
+	_frame++;
 };
 
 void GameWell::ApplyInput(int rotate, int moveX, int moveY, bool sonicDrop, bool hardDrop) {
@@ -167,6 +179,12 @@ void GameWell::ApplyInput(int rotate, int moveX, int moveY, bool sonicDrop, bool
 	}
 	if (lock) LockMino(_currentMino);
 };
+void GameWell::UpdatePreview() {
+	auto previewType = _randomizer.GetPreview(0);
+	Mino preview = Mino(previewType);
+	_previewMinoCoords = preview.GetCoords();
+	_previewMinoColor = _settings.GetPieceColor(previewType);
+}
 void GameWell::SpawnMino(Mino::MinoType type) {
 	if (!_firstMino && _settings.LevelOnSpawn() && (_level % 100 < 99) && _level < (_settings.MaxLevel() - 1)) IncreaseLevel(1); // TODO: Check level system + level stop
 
@@ -385,11 +403,8 @@ void GameWell::Draw() {
 	if (outlineBuffer.size() > 0) _graphics->DrawOutline(&_gameGrid, outlineBuffer);
 
 	// draw Preview
-	auto previewType = _randomizer.GetPreview(0);
-	Mino preview = Mino(previewType);
-	auto coords = preview.GetCoords();
 	for (int i = 0; i < 4; i++) {
-		_graphics->DrawCell(&_previewGrid, coords[i][0], coords[i][1], _settings.GetPieceColor(previewType));
+		_graphics->DrawCell(&_previewGrid, _previewMinoCoords[i][0], _previewMinoCoords[i][1], _previewMinoColor);
 	};
 
 	// Draw UI text

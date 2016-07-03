@@ -6,6 +6,7 @@
 #include "Randomizer.h"
 #include "DisplayGrid.h"
 #include "Settings.h"
+#include <inttypes.h>
 
 class GameWell {
 
@@ -13,10 +14,12 @@ public:
 	
 	GameWell(GraphicsAdapter* graphics, AudioAdapter* audio, InputHandler* _input);
 	GameWell();
-	void Init();
+	void Init(std::vector<int>* sequence = NULL);
 	void Update();
 	void Draw();
 	void Exit();
+
+	std::vector<int>* GetSequence();
 
 private:
 
@@ -35,6 +38,7 @@ private:
 	void IncreaseLevel(int amount);
 	void AddScore(int points);
 	void IncreaseTotalLines(int lines);
+	void UpdatePreview();
 
 	bool TryMove(Mino & mino, int x, int y);
 	bool TryRotate(Mino & mino, int direction);
@@ -68,4 +72,9 @@ private:
 	int _totalLines;
 	bool _rLeft;
 	bool _rRight;
+
+	uint64_t _frame;
+
+	std::vector<std::vector<int>> _previewMinoCoords = {};
+	MinoColors _previewMinoColor = MinoColors::Empty;
 };

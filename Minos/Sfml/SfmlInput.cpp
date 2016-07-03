@@ -22,40 +22,46 @@ std::wstring ConfigFile() {
 	return ss.str();
 }
 
-void SaveSettings(std::map<InputHandler::ControlButton, uint64_t> map) {
+void SaveSettings(std::map<InputHandler::ControlButton, std::vector<uint64_t>> map) {
 	std::ofstream file;
 	errno = 0;
 	file.open(ConfigFile(), std::ios::out | std::ios::trunc | std::ios::binary);
 	if (errno) return;
 	char mapSize = map.size();
 	file.write(&mapSize, 1);
-	char buffer[12];
 	for (auto const &mapping : map) {
 		uint32_t button = mapping.first;
-		uint64_t keyId = mapping.second;
-		file.write((char*)&button, 4);
-		file.write((char*)&keyId, 8);
+		auto keys = mapping.second;
+		int keysSize = keys.size();
+		for (int i = 0; i < keysSize; i++) {
+			uint64_t keyId = keys[i];
+			file.write((char*)&button, 4);
+			file.write((char*)&keyId, 8);
+		}
 	}
 	for (int i = 0; i < mapSize; i++) {
 		;
 	}
 	file.close();
 }
-std::map<InputHandler::ControlButton, uint64_t> LoadSettings() {
-	std::map<InputHandler::ControlButton, uint64_t> map;
+std::map<InputHandler::ControlButton, std::vector<uint64_t>> LoadSettings() {
+	std::map<InputHandler::ControlButton, std::vector<uint64_t>> map;
 	std::fstream file;
 	errno = 0;
 	file.open(ConfigFile(), std::ios::in | std::ios::binary);
 	if (errno) return map;
 	char mapSize = map.size();
 	file.read(&mapSize, 1);
-	char buffer[12];
 	for (int i = 0; i < mapSize; i++) {
+		//InputHandler::ControlButton> button
 		uint32_t button;
 		uint64_t keyId;
 		file.read((char*)&button, 4);
 		file.read((char*)&keyId, 8);
-		map[static_cast<InputHandler::ControlButton>(button)] = keyId;
+
+		auto hejhej = static_cast<InputHandler::ControlButton>(button);
+		if (!map.count(hejhej)) map[hejhej] = std::vector<uint64_t>();
+		map[hejhej].push_back(keyId);
 	}
 	file.close();
 	return map;
@@ -290,22 +296,54 @@ std::vector<uint32_t> split64(uint64_t i) {
 }
 
 void SfmlInput::Load() {
+	//TODO: If load fails (default controls)
 	_reverseMappings = LoadSettings();
+
+	_reverseMappings[ControlButton::CloseMenu] = { combine64(100, sf::Keyboard::Escape) };
+	_reverseMappings[ControlButton::OpenIngameMenu] = { combine64(100, sf::Keyboard::Escape) };
+	_reverseMappings[ControlButton::MenuUp] = { combine64(100, sf::Keyboard::Up) };
+	_reverseMappings[ControlButton::MenuDown] = { combine64(100, sf::Keyboard::Down) };
+	_reverseMappings[ControlButton::SelectMenu] = { combine64(100, sf::Keyboard::Return) };
+
+	_mappings.clear();
+	for (auto const &mapping : _reverseMappings) {
+		uint32_t button = mapping.first;
+		auto keys = mapping.second;
+		int keysSize = keys.size();
+		auto hejhej = static_cast<InputHandler::ControlButton>(button);
+		for (int i = 0; i < keysSize; i++) {
+			if (!_mappings.count(keys[i])) _mappings[keys[i]] = std::vector<ControlButton>();
+			_mappings[keys[i]].push_back(hejhej);
+		}
+	}
+
 }
 void SfmlInput::PressedKeyId(uint64_t keyId) {
 	if (_binding) {
-		_mappings[keyId] = _bindingControl;
-		_reverseMappings[_bindingControl] = keyId;
+		if (!_mappings.count(keyId)) _mappings[keyId] = {};
+		if (!_reverseMappings.count(_bindingControl)) _mappings[_bindingControl] = {};
+		_mappings[keyId].push_back(_bindingControl);
+		_reverseMappings[_bindingControl].push_back(keyId);
 		_binding = false;
 
 		SaveSettings(_reverseMappings);
 	}
 
-	if (!_isPressed.count(keyId) || !_isPressed[keyId]) _justPressed.push_back(keyId);
-	_isPressed[keyId] = true;
+	if (!_mappings.count(keyId)) return;
+	auto buttons = _mappings[keyId];
+	int buttonsSize = buttons.size();
+	for (int i = 0; i < buttonsSize; i++) {
+		if (!_isPressed.count(buttons[i]) || !_isPressed[buttons[i]]) _justPressed.push_back(buttons[i]);
+		_isPressed[buttons[i]] = true;
+	}
 }
 void SfmlInput::ReleasedKeyId(uint64_t keyId) {
-	_isPressed[keyId] = false;
+	if (!_mappings.count(keyId)) return;
+	auto buttons = _mappings[keyId];
+	int buttonsSize = buttons.size();
+	for (int i = 0; i < buttonsSize; i++) {
+		_isPressed[buttons[i]] = false;
+	}
 }
 void SfmlInput::PressedKey(uint32_t key) {
 	PressedKeyId(combine64(100, key));
@@ -360,14 +398,16 @@ bool SfmlInput::WasMouseButtonClicked(MouseButton button) {
 	return std::find(_justClicked.begin(), _justClicked.end(), button == LeftButton ? 0 : button == RightButton ? 1 : 2) != _justClicked.end();
 }
 bool SfmlInput::IsHolding(ControlButton button) {
-	auto keyId = _reverseMappings[button];
-	return _isPressed.count(keyId) && _isPressed[keyId];
+	return _isPressed.count(button) && _isPressed[button];
+}
+bool SfmlInput::JustPressed(ControlButton button) {;
+	return std::find(_justPressed.begin(), _justPressed.end(), button) != _justPressed.end();
 }
 bool SfmlInput::IsMouseButtonHeld(MouseButton button) {
 	return _isClicked.count(button) && _isClicked[button];
 }
 std::string SfmlInput::GetInputFor(ControlButton button) {
-	auto inputIndex = split64(_reverseMappings[button]);
+	auto inputIndex = split64(_reverseMappings[button][0]);
 	return inputIndex[0] == 100 ? getKeyName(static_cast<sf::Keyboard::Key>(inputIndex[1]))
 		: getJoystickButtonName(inputIndex[0], inputIndex[1]);
 }
@@ -375,4 +415,15 @@ std::string SfmlInput::GetInputFor(ControlButton button) {
 void SfmlInput::BindControl(ControlButton button) {
 	_binding = true;
 	_bindingControl = button;
+}
+
+void SfmlInput::AdvanceFrame() {
+	std::vector<ControlButton> frameData;
+	for (auto const &mapping : _isPressed) {
+		if (mapping.second) frameData.push_back(mapping.first);
+	}
+	_recording.push_back(frameData);
+}
+void SfmlInput::BeginRecording() {
+	_recording.clear();
 }

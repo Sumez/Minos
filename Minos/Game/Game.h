@@ -27,4 +27,9 @@ private:
 	InputHandler* _input;
 	std::vector<GameWell*> _activeWells;
 	std::vector<Menu*> _activeMenus;
+
+	Menu* _mainMenu;
+	Menu* _configMenu;
+	Menu* _keyConfigMenu;
+	Menu* _ingameMenu;
 };

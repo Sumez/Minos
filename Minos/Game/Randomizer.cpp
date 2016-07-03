@@ -3,7 +3,7 @@
 #include "Randomizer.h"
 #include "Mino.h"
 
-Randomizer::Randomizer() {
+Randomizer::Randomizer(std::vector<int>* sequence) {
 	_bag[0] = Mino::MinoType::I;
 	_bag[1] = Mino::MinoType::Z;
 	_bag[2] = Mino::MinoType::S;
@@ -11,6 +11,8 @@ Randomizer::Randomizer() {
 	_bag[4] = Mino::MinoType::J;
 	_bag[5] = Mino::MinoType::L;
 	_bag[6] = Mino::MinoType::O;
+
+	_sequence = sequence == NULL ? new std::vector<int>() : sequence;
 
 	_history = std::vector<int>(4);
 	_history[0] = 1;
@@ -40,16 +42,24 @@ Mino::MinoType Randomizer::GetRandomMino() {
 	int rngMaxTries = 6;
 	int rngDummyResults = 0;
 
-
 	int number = 7; // Initial dummy number forcing roll. Each roll might also result in a dummy number (if rngDummyResults > 0), always forcing another reroll
-	int attempts = 0;
 
-	while ((attempts < rngMaxTries && IsInHistory(number)) || number >= 7) {
-		attempts++;
-		int dummyAdd = rngDummyResults;
-		if (attempts == rngMaxTries) dummyAdd = 0;
-		number = std::rand() % (7 + dummyAdd);
+	if (_sequence->size() > _sequenceCounter)  {
+		number = _sequence->at(_sequenceCounter);
 	}
+	else {
+
+		int attempts = 0;
+
+		while ((attempts < rngMaxTries && IsInHistory(number)) || number >= 7) {
+			attempts++;
+			int dummyAdd = rngDummyResults;
+			if (attempts == rngMaxTries) dummyAdd = 0;
+			number = std::rand() % (7 + dummyAdd);
+		}
+		_sequence->push_back(number);
+	}
+	_sequenceCounter++;
 
 	_history.erase(_history.begin());
 	_history.push_back(number);

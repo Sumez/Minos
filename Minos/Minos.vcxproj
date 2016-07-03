@@ -88,6 +88,7 @@
     <ClInclude Include="Game\DisplayGrid.h" />
     <ClInclude Include="Game\Game.h" />
     <ClInclude Include="Game\GameWell.h" />
+    <ClInclude Include="Game\InputReplay.h" />
     <ClInclude Include="Game\MainMenu.h" />
     <ClInclude Include="Game\Menu.h" />
     <ClInclude Include="GraphicsAdapter.h" />
@@ -200,6 +201,7 @@
     <ClCompile Include="Game\DisplayGrid.cpp" />
     <ClCompile Include="Game\Game.cpp" />
     <ClCompile Include="Game\GameWell.cpp" />
+    <ClCompile Include="Game\InputReplay.cpp" />
     <ClCompile Include="Game\MainMenu.cpp" />
     <ClCompile Include="Game\Menu.cpp" />
     <ClCompile Include="Game\Mino.cpp" />
