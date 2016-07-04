@@ -91,6 +91,8 @@
     <ClInclude Include="Game\InputReplay.h" />
     <ClInclude Include="Game\MainMenu.h" />
     <ClInclude Include="Game\Menu.h" />
+    <ClInclude Include="Game\Replay.h" />
+    <ClInclude Include="Game\Session.h" />
     <ClInclude Include="GraphicsAdapter.h" />
     <ClInclude Include="Game\Mino.h" />
     <ClInclude Include="Game\Randomizer.h" />
@@ -206,7 +208,9 @@
     <ClCompile Include="Game\Menu.cpp" />
     <ClCompile Include="Game\Mino.cpp" />
     <ClCompile Include="Game\Randomizer.cpp" />
+    <ClCompile Include="Game\Replay.cpp" />
     <ClCompile Include="Game\RotationSet.cpp" />
+    <ClCompile Include="Game\Session.cpp" />
     <ClCompile Include="Game\Settings.cpp" />
     <ClCompile Include="Minos.cpp" />
     <ClCompile Include="Sfml\SfmlInput.cpp" />

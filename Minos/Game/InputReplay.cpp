@@ -1,10 +1,8 @@
 #include "stdafx.h"
 #include "../stdafx.h"
-#include <inttypes.h>
 #include "InputReplay.h"
 
-InputReplay::InputReplay(std::vector<std::vector<ControlButton>>& recording) {
-	_recording = recording;
+InputReplay::InputReplay(std::vector<std::vector<ControlButton>>& recording) : _recording(recording) {
 }
 
 Coords InputReplay::GetMouseCoords() { return Coords(); }

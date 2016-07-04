@@ -9,14 +9,11 @@
 
 std::wstring ConfigFile() {
 	std::wstringstream ss;
-	TCHAR path[MAX_PATH];
-	// Get path for each computer, non-user specific and non-roaming data.
-	if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_COMMON_APPDATA, NULL, 0, path)))
+	PWSTR path = NULL;
+	if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_RoamingAppData, 0, NULL, &path)))
 	{
-		// Append product-specific path
-		//PathAppend(path, _T("\\My Company\\My Product\\1.0\\"));
 		ss << path << "\\Minos\\";
-		CreateDirectory(ss.str().c_str(), NULL);
+		CreateDirectory(ss.str().c_str(), NULL); // Fails if exists, but no one cares
 	}
 	ss << "settings.cfg";
 	return ss.str();
@@ -407,6 +404,7 @@ bool SfmlInput::IsMouseButtonHeld(MouseButton button) {
 	return _isClicked.count(button) && _isClicked[button];
 }
 std::string SfmlInput::GetInputFor(ControlButton button) {
+	if (!_reverseMappings.count(button)) return "";
 	auto inputIndex = split64(_reverseMappings[button][0]);
 	return inputIndex[0] == 100 ? getKeyName(static_cast<sf::Keyboard::Key>(inputIndex[1]))
 		: getJoystickButtonName(inputIndex[0], inputIndex[1]);
@@ -418,11 +416,11 @@ void SfmlInput::BindControl(ControlButton button) {
 }
 
 void SfmlInput::AdvanceFrame() {
-	std::vector<ControlButton> frameData;
+	_recording.push_back({});
+	auto& frameData = _recording[_recording.size() - 1];
 	for (auto const &mapping : _isPressed) {
 		if (mapping.second) frameData.push_back(mapping.first);
 	}
-	_recording.push_back(frameData);
 }
 void SfmlInput::BeginRecording() {
 	_recording.clear();

@@ -9,17 +9,21 @@ GameWell::GameWell() {
 GameWell::GameWell(GraphicsAdapter* graphics, AudioAdapter* audio, InputHandler* input) {
 	_graphics = graphics;
 	_audio = audio;
-	_input = input;
+	_actualInput = input;
 }
 
-std::vector<int>* GameWell::GetSequence() {
-	return _randomizer.GetSequence();
-}
-
-void GameWell::Init(std::vector<int>* sequence) {
+void GameWell::Init(Replay* replay) {
 	
-	_randomizer = Randomizer(sequence);
+	if (replay != NULL) {
+		_input = new InputReplay(replay->RecordedInput); // TODO: Delete input replay
+		_randomizer = Randomizer(&replay->MinoSequence);
+	}
+	else {
+		_input = _actualInput;
+		_randomizer = Randomizer();
+	}
 	_grid = std::vector<std::vector<int>>(22, std::vector<int>(10));
+	_outlineBuffer = _grid;
 	_rowsToClear = std::vector<int>(0);
 	_firstMino = true;
 	_frame = 0;
@@ -51,9 +55,17 @@ void GameWell::Init(std::vector<int>* sequence) {
 
 	_audio->Play(AudioAdapter::ReadyStartGo);
 	_symbols.push_back(DisplayedSymbol(Three));
+
+	State = Playing;
 };
 
 void GameWell::Update() {
+
+	int numSymbols = _symbols.size();
+	for (int i = 0; i < numSymbols; i++) _symbols[i].Timer++;
+	while (!_symbols.empty() && _symbols[0].Timer >= 40) _symbols.erase(_symbols.begin()); // Assumes the first symbol is always the oldest
+
+	if (State != Playing) return;
 
 	int rotate = 0;
 	int moveX = 0;
@@ -123,6 +135,7 @@ void GameWell::Update() {
 			spawnTimer = -1;
 		}
 	}
+
 	if (lineClearTimer >= 0) {
 		lineClearTimer--;
 		if (lineClearTimer == 0) {
@@ -130,7 +143,7 @@ void GameWell::Update() {
 			lineClearTimer = -1;
 		}
 	}
-	if (spawnTimer < 0 && lineClearTimer < 0) { // TODO: if Mino exists
+	if (spawnTimer < 0 && lineClearTimer < 0 && State != GameOver) { // TODO: if Mino exists
 		ApplyGravity();
 		ApplyInput(rotate, moveX, moveY, sonicDrop, hardDrop);
 	}
@@ -138,11 +151,6 @@ void GameWell::Update() {
 	// Set these after spawn logic, to prevent double rotations when rotating on the exact frame a mino spawns (minor difference TODO: confirm this tgm behavior: frame perfect rotation can't prevent game over, like IRS could)
 	_rLeft = rLeft;
 	_rRight = rRight;
-
-	int numSymbols = _symbols.size();
-	for (int i = 0; i < numSymbols; i++) _symbols[i].Timer++;
-	while (!_symbols.empty() && _symbols[0].Timer >= 40) _symbols.erase(_symbols.begin()); // Assumes the first symbol is always the oldest
-
 
 	_input->AdvanceFrame();
 	_frame++;
@@ -199,6 +207,7 @@ void GameWell::SpawnMino(Mino::MinoType type) {
 	
 	if (Collides(_currentMino.GetCoords())) {
 		// TODO: Game over
+		State = GameOver;
 	}
 	_firstMino = 0;
 }
@@ -207,6 +216,7 @@ void GameWell::IncreaseLevel(int amount) {
 	if (_level >= _settings.MaxLevel()) {
 		_level = _settings.MaxLevel();
 		//TODO: Winning!
+		State = GameOver;
 	}
 	_settings.SetLevel(_level);
 };
@@ -359,9 +369,6 @@ bool GameWell::Collides(Mino & mino, int x, int y) {
 
 void GameWell::Draw() {
 
-	// Test textures
-	//_graphics->DrawSprite(_blockSprite);
-
 	// Draw well
 	_graphics->DrawBackground(_level / 100);
 
@@ -370,21 +377,25 @@ void GameWell::Draw() {
 	_graphics->DrawBackdrop(&_gameGrid);
 
 	// Draw stack
-	std::vector<std::vector<int>> outlineBuffer;
 	for (int y = 0; y < 22; y++) {
 		int mode = CellMode::Stack;
 		if (IsLineSetToClear(y)) mode = mode | CellMode::Clearing;
+		if (State == GameOver) mode = mode | CellMode::GameOver;
 		for (int x = 0; x < 10; x++) {
+			_outlineBuffer[y][x] = 0;
 			if (_grid[y][x] > 0) {
 				_graphics->DrawCell(&_gameGrid, x, y, _grid[y][x], 0, static_cast<CellMode>(mode));
-				if (y > 0 && _grid[y - 1][x] == 0) outlineBuffer.push_back({ x, y - 2, 0 });
-				if (x < 10 - 1 && _grid[y][x + 1] == 0) outlineBuffer.push_back({ x, y - 2, 1 });
-				if (y < 22 - 1 && _grid[y + 1][x] == 0) outlineBuffer.push_back({ x, y - 2, 2 });
-				if (x > 0 && _grid[y][x - 1] == 0) outlineBuffer.push_back({ x, y - 2, 3 });
+				if (y > 0 && _grid[y - 1][x] == 0) _outlineBuffer[y][x] |= 0x01;
+				if (x < 10 - 1 && _grid[y][x + 1] == 0) _outlineBuffer[y][x] |= 0x02;
+				if (y < 22 - 1 && _grid[y + 1][x] == 0) _outlineBuffer[y][x] |= 0x04;
+				if (x > 0 && _grid[y][x - 1] == 0) _outlineBuffer[y][x] |= 0x08;
 			}
 		}
 	}
 
+	// Draw white outline
+	_graphics->DrawOutline(&_gameGrid, _outlineBuffer);
+	
 	// draw Current Mino
 	if (spawnTimer < 0 && lineClearTimer < 0) { // TODO: Keep track of active mino(s)
 
@@ -398,9 +409,6 @@ void GameWell::Draw() {
 			_graphics->DrawCell(&_gameGrid, coords[i][0], coords[i][1], _currentMino.Color, (double)_currentMino.LockTimer / _settings.LockDelay());
 		};
 	}
-
-	// Draw white outline
-	if (outlineBuffer.size() > 0) _graphics->DrawOutline(&_gameGrid, outlineBuffer);
 
 	// draw Preview
 	for (int i = 0; i < 4; i++) {
@@ -424,6 +432,10 @@ void GameWell::Draw() {
 		_graphics->DrawSymbol(&_gameGrid, symbol.Type, 1 - (double)symbol.Timer / 40, 1 + (double)symbol.Timer / 40);
 	}
 };
+
+Replay* GameWell::GetReplay() {
+	return new Replay(_input->GetRecording(), _randomizer.GetSequence());
+}
 
 void GameWell::Exit() {
 

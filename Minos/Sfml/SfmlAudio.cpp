@@ -32,5 +32,6 @@ void SfmlAudio::LoadGameData() {
 };
 
 void SfmlAudio::Play(Sounds sound) {
+	_soundIndex[sound]->setVolume(5);
 	_soundIndex[sound]->play();
 };

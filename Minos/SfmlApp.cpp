@@ -20,8 +20,8 @@ void SfmlApp::Start(void)
 	_audio->Init();
 
 	_window.create(sf::VideoMode(1024, 768, 32), "Minos");
-	//_window.setPosition(sf::Vector2i(-1400, 200));
-	//_window.setSize(sf::Vector2u(400, 300));
+	_window.setPosition(sf::Vector2i(-1400, 200));
+	_window.setSize(sf::Vector2u(400, 300));
 
 	_game = new Game(_graphics, _audio, _input);
 	auto loaderThread = std::thread(LoadGameData);
@@ -34,10 +34,12 @@ void SfmlApp::Start(void)
 		counter += clock.restart().asMicroseconds();
 		if (counter < 16666) continue;
 		counter -= 16666;
+		GameLoop();
 #ifdef _DEBUG
+		_graphics->DrawText(std::to_string(counter), 600, 50);
+		_window.display();
 		counter = 0; // Prevent "catching up" to slow frames while debugging
 #endif
-		GameLoop();
 	}
 
 	loaderThread.detach();
@@ -94,7 +96,7 @@ void SfmlApp::GameLoop()
 	_game->Update();
 	_window.clear(sf::Color(0, 0, 0));
 	_game->Draw();
-	_window.display();
+	//_window.display();
 
 	if (_game->Exiting) _exit = true;
 }

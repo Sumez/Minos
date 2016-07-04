@@ -6,18 +6,28 @@
 #include "Randomizer.h"
 #include "DisplayGrid.h"
 #include "Settings.h"
+#include "InputReplay.h"
+#include "Replay.h"
 #include <inttypes.h>
 
 class GameWell {
 
 public:
 	
+	enum GameState {
+		Playing,
+		Paused,
+		GameOver
+	};
+
 	GameWell(GraphicsAdapter* graphics, AudioAdapter* audio, InputHandler* _input);
 	GameWell();
-	void Init(std::vector<int>* sequence = NULL);
+	void Init(Replay* replay = NULL);
 	void Update();
 	void Draw();
 	void Exit();
+	Replay* GetReplay();
+	GameState State = Playing;
 
 	std::vector<int>* GetSequence();
 
@@ -49,11 +59,13 @@ private:
 	bool IsLineSetToClear(int rowIndex);
 
 	std::vector<std::vector<int>> _grid;
+	std::vector<std::vector<int>> _outlineBuffer;
 	std::vector<int> _rowsToClear;
 
 	Randomizer _randomizer;
 	GraphicsAdapter* _graphics;
 	AudioAdapter* _audio;
+	InputHandler* _actualInput;
 	InputHandler* _input;
 	Mino _currentMino;
 	Settings _settings;

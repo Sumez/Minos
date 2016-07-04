@@ -29,6 +29,7 @@ public:
 	};
 	
 	Menu(GraphicsAdapter* graphics, AudioAdapter* audio, InputHandler* input);
+	~Menu();
 	virtual void SelectMenuItem(int index);
 	virtual void Update();
 	virtual void Draw();

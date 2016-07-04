@@ -1,4 +1,5 @@
 #pragma once
+#include <inttypes.h>
 #include "../InputHandler.h"
 
 class InputReplay : public InputHandler {
@@ -22,5 +23,5 @@ public:
 private:
 
 	uint64_t _frame = 0;
-	std::vector<std::vector<ControlButton>> _recording;
+	std::vector<std::vector<ControlButton>>& _recording;
 }; 

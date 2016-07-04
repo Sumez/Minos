@@ -21,6 +21,6 @@ public:
 	virtual void DrawSymbol(DisplayGrid* grid, Symbol type, double opacity, double size) = 0;
 	virtual void DrawBackdrop(DisplayGrid* grid) = 0;
 	virtual void DrawRectangle(int x1, int y1, int x2, int y2, unsigned color = 0x00000088) = 0;
-	virtual void DrawOutline(DisplayGrid* grid, std::vector<std::vector<int>> buffer) = 0;
+	virtual void DrawOutline(DisplayGrid* grid, std::vector<std::vector<int>>& buffer) = 0;
 	virtual void DrawBackground(int index) = 0;
 };

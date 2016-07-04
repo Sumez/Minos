@@ -86,7 +86,7 @@ void SfmlGraphics::DrawText(std::string text, int x, int y, int size, unsigned c
 	auto sfText = sf::Text(text, *_font, size);
 	sfText.setPosition(x, y);
 	sfText.setColor(sf::Color(color));
-	_renderTarget->draw(sfText);
+          	_renderTarget->draw(sfText);
 };
 
 void SfmlGraphics::DrawSprite(sf::Sprite sprite) {
@@ -101,10 +101,11 @@ void SfmlGraphics::DrawMino(std::vector<std::vector<int>> coords) {
 };
 void SfmlGraphics::DrawCell(DisplayGrid* grid, int x, int y, int color, double dark, CellMode modeFlags) {
 
-	auto sprite = _colorSprites[color];
+	sf::Sprite* sprite = &_colorSprites[color];
 	auto blend = sf::Color(255, 255, 255);
+	if (modeFlags & CellMode::GameOver) sprite = &_colorSprites[MinoColors::Gray];
 
-	sprite.setPosition(x * grid->CellWidth + grid->X, y * grid->CellHeight + grid->Y);
+	sprite->setPosition(x * grid->CellWidth + grid->X, y * grid->CellHeight + grid->Y);
 	if (modeFlags & CellMode::Ghost || modeFlags & CellMode::Clearing) {
 		blend.a = 51;
 	}
@@ -114,8 +115,8 @@ void SfmlGraphics::DrawCell(DisplayGrid* grid, int x, int y, int color, double d
 	if (dark > 0) {
 		blend.r = blend.g = blend.b = 255 - 100 * dark;
 	}
-	sprite.setColor(blend);
-	_renderTarget->draw(sprite);
+	sprite->setColor(blend);
+	_renderTarget->draw(*sprite);
 };
 void SfmlGraphics::DrawSymbol(DisplayGrid* grid, Symbol type, double opacity, double scale) {
 	sf::String string;
@@ -141,51 +142,51 @@ void SfmlGraphics::DrawSymbol(DisplayGrid* grid, Symbol type, double opacity, do
 	_renderTarget->draw(sfText);
 };
 
-void SfmlGraphics::DrawOutline(DisplayGrid* grid, std::vector<std::vector<int>> buffer) {
-	int bufferSize = buffer.size();
+void SfmlGraphics::DrawOutline(DisplayGrid* grid, std::vector<std::vector<int>>& buffer) {
+	int bufferWidth = grid->Width;
+	int bufferHeight = grid->Height;
 	std::vector<sf::Vertex> vertices;
 
 	int outlineWidth = 2;
 	int cWidth = grid->CellWidth;
 	int cHeight = grid->CellHeight;
 	int offsetX = grid->X;
-	int offsetY = grid->Y + cHeight * grid->InvisibleRows;
+	int offsetY = grid->Y;
 	auto color = sf::Color(0xffffffff);
 
-	for (int i = 0; i < bufferSize; i++) {
-		int x = buffer[i][0] * cWidth + offsetX;
-		int y = buffer[i][1] * cHeight + offsetY;
-		int type = buffer[i][2];
+	for (int gridY = 0; gridY < bufferHeight; gridY++)
+		for (int gridX = 0; gridX < bufferWidth; gridX++){
+		int type = buffer[gridY][gridX];
+		int x = gridX * cWidth + offsetX;
+		int y = gridY * cHeight + offsetY;
 
-		switch (type){
-		case 0:
+		if (type & 0x01) {
 			vertices.push_back(sf::Vertex(sf::Vector2f(x + cWidth, y), color));
 			vertices.push_back(sf::Vertex(sf::Vector2f(x, y), color));
 			vertices.push_back(sf::Vertex(sf::Vector2f(x, y + outlineWidth), color));
 			vertices.push_back(sf::Vertex(sf::Vector2f(x + cWidth, y + outlineWidth), color));
-			break;
-		case 1:
+		}
+		if (type & 0x02) {
 			vertices.push_back(sf::Vertex(sf::Vector2f(x + cWidth, y), color));
 			vertices.push_back(sf::Vertex(sf::Vector2f(x + cWidth - outlineWidth, y), color));
 			vertices.push_back(sf::Vertex(sf::Vector2f(x + cWidth - outlineWidth, y + cHeight), color));
 			vertices.push_back(sf::Vertex(sf::Vector2f(x + cWidth, y + cHeight), color));
-			break;
-		case 2:
+		}
+		if (type & 0x04) {
 			vertices.push_back(sf::Vertex(sf::Vector2f(x, y + cHeight), color));
 			vertices.push_back(sf::Vertex(sf::Vector2f(x + cWidth, y + cHeight), color));
 			vertices.push_back(sf::Vertex(sf::Vector2f(x + cWidth, y + cHeight - outlineWidth), color));
 			vertices.push_back(sf::Vertex(sf::Vector2f(x, y + cHeight - outlineWidth), color));
-			break;
-		case 3:
+		}
+		if (type & 0x08) {
 			vertices.push_back(sf::Vertex(sf::Vector2f(x, y + cHeight), color));
 			vertices.push_back(sf::Vertex(sf::Vector2f(x + outlineWidth, y + cHeight), color));
 			vertices.push_back(sf::Vertex(sf::Vector2f(x + outlineWidth, y), color));
 			vertices.push_back(sf::Vertex(sf::Vector2f(x, y), color));
-			break;
 		}
 	}
 
-	_renderTarget->draw(&vertices[0], vertices.size(), sf::Quads);
+	if (vertices.size()) _renderTarget->draw(&vertices[0], vertices.size(), sf::Quads);
 };
 
 void SfmlGraphics::DrawBackdrop(DisplayGrid* grid) {

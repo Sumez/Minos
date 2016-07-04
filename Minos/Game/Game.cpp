@@ -13,14 +13,17 @@ Game::Game(GraphicsAdapter* graphics, AudioAdapter* audio, InputHandler* input) 
 	_mainMenu = new MainMenu(graphics, audio, input);
 	_mainMenu->Add(new MenuItem("Begin game", [&, this]() -> void {
 		if (LoadedState != Loaded) return;
-		auto newWell = new GameWell(_graphics, _audio, _input);
-		newWell->Init();
-		_activeWells.push_back(newWell);
+		auto newSession = new Session(_graphics, _audio, _input);
+		newSession->Init();
+		_activeSessions.push_back(newSession);
 		_activeMenus.erase(_activeMenus.begin());
 	}));
 
 	_mainMenu->Add(new MenuItem("Configuration", [this]() -> void {
 		_activeMenus.push_back(_configMenu);
+	}));
+	_mainMenu->Add(new MenuItem("Replays", [this]() -> void {
+		_activeMenus.push_back(_replayMenu);
 	}));
 	_mainMenu->Add(new MenuItem("Exit", [this]() -> void { Exiting = true; }));
 
@@ -30,6 +33,23 @@ Game::Game(GraphicsAdapter* graphics, AudioAdapter* audio, InputHandler* input) 
 	}));
 	_configMenu->Add(new MenuItem("Back", [this]() -> void { CloseMenu(); }));
 
+	_replayMenu = new Menu(_graphics, _audio, _input);
+	// TODO: Move to separate file, and only init when menu is displayed
+	_replays = Replay::GetReplays(); // TODO: static list of replay or Delete replays when refreshing
+	int replaySize = _replays.size();
+	for (int i = 0; i < replaySize; i++) {
+		ReplayHeader* replayHeader = &_replays[i];
+		_replayMenu->Add(new MenuItem("A replay", [=]() -> void {
+			if (LoadedState != Loaded) return;
+			Replay* replay = new Replay(replayHeader->Filename); // TODO: Delete replay when done playing
+			auto* newSession = new Session(_graphics, _audio, _input);
+			newSession->Init(replay);
+			_activeSessions.push_back(newSession);
+			while (_activeMenus.size()) _activeMenus.erase(_activeMenus.begin());
+		}));
+	}
+	_replayMenu->Add(new MenuItem("Back", [this]() -> void { CloseMenu(); }));
+
 	_keyConfigMenu = new ControlConfigMenu(_graphics, _audio, _input);
 	_keyConfigMenu->Style = Menu::Small;
 	_keyConfigMenu->Add(new MenuItem("Back", [this]() -> void { CloseMenu(); }));
@@ -38,40 +58,29 @@ Game::Game(GraphicsAdapter* graphics, AudioAdapter* audio, InputHandler* input) 
 	_ingameMenu->Add(new MenuItem("Resume game", [this]() -> void {
 		CloseMenu();
 	}));
-	_ingameMenu->Add(new MenuItem("Replay", [this]() -> void {
-		CloseMenu();
-		_activeMenus.push_back(_mainMenu);
-		auto recordedSequence = _activeWells[_activeWells.size() - 1]->GetSequence();
-		delete _activeWells[_activeWells.size() - 1];
-		_activeWells.pop_back();
-
-		auto replayWell = new GameWell(_graphics, _audio, new InputReplay(_input->GetRecording()));
-		replayWell->Init(recordedSequence);
-		_activeWells.push_back(replayWell);
-	}));
 	_ingameMenu->Add(new MenuItem("Configuration", [this]() -> void {
 		_activeMenus.push_back(_keyConfigMenu);
 	}));
 	_ingameMenu->Add(new MenuItem("Quit game", [this]() -> void {
 		CloseMenu();
 		_activeMenus.push_back(_mainMenu);
-		delete _activeWells[_activeWells.size() - 1];
-		_activeWells.pop_back();
+		delete _activeSessions[_activeSessions.size() - 1];
+		_activeSessions.pop_back();
 	}));
 
 	_activeMenus.push_back(_mainMenu);
 }
 
 void Game::CloseMenu() {
-	if (_activeMenus.size() <= 1 && _activeWells.empty()) return;
+	if (_activeMenus.size() <= 1 && _activeSessions.empty()) return;
 	_activeMenus.pop_back();
 }
 
 void Game::Update() {
 
-	int wells = _activeWells.size();
-	for (int i = 0; i < wells; i++){
-		_activeWells[i]->Update();
+	int sessions = _activeSessions.size();
+	for (int i = 0; i < sessions; i++){
+		_activeSessions[i]->Update();
 	}
 
 	int menus = _activeMenus.size();
@@ -79,7 +88,7 @@ void Game::Update() {
 		CloseMenu();
 		menus = _activeMenus.size();
 	}
-	else if (menus == 0 && wells > 0 && _input->JustPressed(InputHandler::OpenIngameMenu)) {
+	else if (menus == 0 && sessions > 0 && _input->JustPressed(InputHandler::OpenIngameMenu)) {
 		_activeMenus.push_back(_ingameMenu);
 		menus = _activeMenus.size();
 	}
@@ -87,9 +96,9 @@ void Game::Update() {
 	if (!_activeMenus.empty()) _activeMenus[menus - 1]->Update();
 }
 void Game::Draw() {
-	int wells = _activeWells.size();
+	int wells = _activeSessions.size();
 	for (int i = 0; i < wells; i++) {
-		_activeWells[i]->Draw();
+		_activeSessions[i]->Draw();
 	}
 
 	int menus = _activeMenus.size();

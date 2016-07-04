@@ -2,7 +2,7 @@
 #include "../GraphicsAdapter.h"
 #include "../AudioAdapter.h"
 #include "../InputHandler.h"
-#include "GameWell.h"
+#include "Session.h"
 #include "Menu.h"
 
 class Game {
@@ -25,11 +25,15 @@ private:
 	GraphicsAdapter* _graphics;
 	AudioAdapter* _audio;
 	InputHandler* _input;
-	std::vector<GameWell*> _activeWells;
+	std::vector<Session*> _activeSessions;
 	std::vector<Menu*> _activeMenus;
 
 	Menu* _mainMenu;
 	Menu* _configMenu;
+	Menu* _replayMenu;
 	Menu* _keyConfigMenu;
 	Menu* _ingameMenu;
+
+
+	std::vector<ReplayHeader> _replays;
 };

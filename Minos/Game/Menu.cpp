@@ -8,6 +8,10 @@ Menu::Menu(GraphicsAdapter* graphics, AudioAdapter* audio, InputHandler* input) 
 	_audio = audio;
 	_input = input;
 }
+Menu::~Menu() {
+	int menuItems = _menuItems.size();
+	for (int i = 0; i < menuItems; i++) delete _menuItems[i];
+}
 
 void Menu::Update() {
 
