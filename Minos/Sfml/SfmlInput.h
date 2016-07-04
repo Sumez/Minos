@@ -16,7 +16,7 @@ public:
 	virtual std::string GetInputFor(ControlButton button);
 	virtual void AdvanceFrame();
 	virtual void BeginRecording();
-	virtual std::vector<std::vector<ControlButton>>& GetRecording() { return _recording; }
+	virtual std::vector<int>& GetRecording() { return _recording; }
 
 	void Load();
 	void PressedKey(uint32_t key);
@@ -41,14 +41,11 @@ private:
 	std::map<uint64_t, std::vector<ControlButton>> _mappings;
 	std::map<ControlButton, std::vector<uint64_t>> _reverseMappings;
 	
-
-	std::map<ControlButton, bool> _isPressed;
-	std::vector<ControlButton> _justPressed;
-
 	std::map<int, bool> _isClicked;
 	std::vector<int> _justClicked;
 
 	sf::Vector2f _mouseCoords;
 
-	std::vector<std::vector<ControlButton>> _recording;
+	std::vector<int> _recording;
+	std::vector<int> _thisFrame;
 };

@@ -47,12 +47,8 @@ void Replay::Save() {
 	uint64_t inputSize = RecordedInput.size();
 	file.write((char*)&inputSize, 8);
 	for (int i = 0; i < inputSize; i++) {
-		char frameSize = RecordedInput[i].size();
-		file.write(&frameSize, 1);
-		for (int j = 0; j < frameSize; j++) {
-			uint32_t button = RecordedInput[i][j];
-			file.write((char*)&button, 4);
-		}
+		uint32_t number = RecordedInput[i];
+		file.write((char*)&number, 4);
 	}
 	
 	file.close();
@@ -81,15 +77,9 @@ Replay::Replay(std::wstring filename) {
 	uint64_t inputSize;
 	file.read((char*)&inputSize, 8);
 	for (int i = 0; i < inputSize; i++) {
-		RecordedInput.push_back({});
-		char frameSize;
-		file.read(&frameSize, 1);
-		for (int j = 0; j < frameSize; j++) {
-			uint32_t button;
-			file.read((char*)&button, 4);
-			auto hejhej = static_cast<InputHandler::ControlButton>(button);
-			RecordedInput[i].push_back(hejhej);
-		}
+		uint32_t number;
+		file.read((char*)&number, 4);
+		RecordedInput.push_back(number);
 	}
 	file.close();
 }

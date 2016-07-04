@@ -5,7 +5,7 @@
 class InputReplay : public InputHandler {
 public:
 
-	InputReplay(std::vector<std::vector<ControlButton>>& recording);
+	InputReplay(std::vector<int>& recording);
 
 	virtual Coords GetMouseCoords();
 	virtual bool IsHolding(ControlButton button);
@@ -18,10 +18,12 @@ public:
 	virtual std::string GetInputFor(ControlButton button);
 	virtual void AdvanceFrame();
 	virtual void BeginRecording();
-	virtual std::vector<std::vector<ControlButton>>& GetRecording() { return _recording; };
+	virtual std::vector<int>& GetRecording() { return _recording; };
 
 private:
+	void ProcessInput();
 
+	uint64_t _pointer = 0;
 	uint64_t _frame = 0;
-	std::vector<std::vector<ControlButton>>& _recording;
+	std::vector<int>& _recording;
 }; 

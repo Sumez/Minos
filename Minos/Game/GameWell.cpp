@@ -394,7 +394,7 @@ void GameWell::Draw() {
 	}
 
 	// Draw white outline
-	_graphics->DrawOutline(&_gameGrid, _outlineBuffer);
+	//_graphics->DrawOutline(&_gameGrid, _outlineBuffer);
 	
 	// draw Current Mino
 	if (spawnTimer < 0 && lineClearTimer < 0) { // TODO: Keep track of active mino(s)

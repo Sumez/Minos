@@ -2,17 +2,15 @@
 #include "../stdafx.h"
 #include "InputReplay.h"
 
-InputReplay::InputReplay(std::vector<std::vector<ControlButton>>& recording) : _recording(recording) {
+InputReplay::InputReplay(std::vector<int>& recording) : _recording(recording) {
 }
 
 Coords InputReplay::GetMouseCoords() { return Coords(); }
 bool InputReplay::IsHolding(ControlButton button) {
-	if (_frame >= _recording.size()) return false;
-	std::vector<ControlButton>& heldButtons = _recording[_frame];
-	return std::find(heldButtons.begin(), heldButtons.end(), button) != heldButtons.end();
+	return _isPressed.count(button) && _isPressed[button];
 }
 bool InputReplay::JustPressed(ControlButton button) {
-	return false;
+	return std::find(_justPressed.begin(), _justPressed.end(), button) != _justPressed.end();
 }
 bool InputReplay::WasMouseButtonClicked(MouseButton button) {
 	return false;
@@ -25,7 +23,20 @@ void InputReplay::CancelBind() { }
 std::string InputReplay::GetInputFor(ControlButton button) { return ""; }
 void InputReplay::AdvanceFrame() {
 	_frame++;
+	ProcessInput();
 }
 void InputReplay::BeginRecording() {
 	_frame = 0;
+	_pointer = 0;
+	ProcessInput();
+}
+void InputReplay::ProcessInput() {
+	int inputs = _recording[_pointer];
+	_pointer++;
+
+	for (int i = 0; i < inputs; i++) {
+		if (_recording[_pointer] > 0) PressedButton(static_cast<ControlButton>(_recording[_pointer]));
+		else ReleasedButton(static_cast<ControlButton>(- _recording[_pointer]));
+		++_pointer;
+	}
 }

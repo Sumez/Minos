@@ -46,5 +46,17 @@ public:
 	virtual void BeginRecording() = 0;
 	virtual void AdvanceFrame() = 0;
 
-	virtual std::vector<std::vector<ControlButton>>& GetRecording() = 0;
+	virtual std::vector<int>& GetRecording() = 0;
+
+protected:
+	std::map<ControlButton, bool> _isPressed;
+	std::vector<ControlButton> _justPressed;
+
+	void PressedButton(ControlButton button)  {
+		if (!_isPressed.count(button) || !_isPressed[button]) _justPressed.push_back(button);
+		_isPressed[button] = true;
+	};
+	void ReleasedButton(ControlButton button)  {
+		_isPressed[button] = false;
+	};
 };

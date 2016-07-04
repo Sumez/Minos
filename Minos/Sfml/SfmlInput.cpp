@@ -330,8 +330,10 @@ void SfmlInput::PressedKeyId(uint64_t keyId) {
 	auto buttons = _mappings[keyId];
 	int buttonsSize = buttons.size();
 	for (int i = 0; i < buttonsSize; i++) {
-		if (!_isPressed.count(buttons[i]) || !_isPressed[buttons[i]]) _justPressed.push_back(buttons[i]);
-		_isPressed[buttons[i]] = true;
+
+		_thisFrame.push_back(buttons[i]);
+
+		PressedButton(buttons[i]);
 	}
 }
 void SfmlInput::ReleasedKeyId(uint64_t keyId) {
@@ -339,7 +341,10 @@ void SfmlInput::ReleasedKeyId(uint64_t keyId) {
 	auto buttons = _mappings[keyId];
 	int buttonsSize = buttons.size();
 	for (int i = 0; i < buttonsSize; i++) {
-		_isPressed[buttons[i]] = false;
+
+		_thisFrame.push_back(- buttons[i]);
+
+		ReleasedButton(buttons[i]);
 	}
 }
 void SfmlInput::PressedKey(uint32_t key) {
@@ -416,12 +421,15 @@ void SfmlInput::BindControl(ControlButton button) {
 }
 
 void SfmlInput::AdvanceFrame() {
-	_recording.push_back({});
-	auto& frameData = _recording[_recording.size() - 1];
-	for (auto const &mapping : _isPressed) {
-		if (mapping.second) frameData.push_back(mapping.first);
+	int frameLength = _thisFrame.size();
+	_recording.push_back(frameLength);
+	for (int i = 0; i < frameLength; i++) {
+		_recording.push_back(_thisFrame[i]);
 	}
+	_thisFrame.clear();
 }
 void SfmlInput::BeginRecording() {
 	_recording.clear();
+	_recording.reserve(100000);// Reserve a LOT of space for recording, to prevent sudden slowdown
+	int hej = 3;
 }
