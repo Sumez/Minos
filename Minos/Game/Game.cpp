@@ -11,13 +11,7 @@ Game::Game(GraphicsAdapter* graphics, AudioAdapter* audio, InputHandler* input) 
 	_input = input;
 
 	_mainMenu = new MainMenu(graphics, audio, input);
-	_mainMenu->Add(new MenuItem("Begin game", [&, this]() -> void {
-		if (LoadedState != Loaded) return;
-		auto newSession = new Session(_graphics, _audio, _input);
-		newSession->Init();
-		_activeSessions.push_back(newSession);
-		_activeMenus.erase(_activeMenus.begin());
-	}));
+	_mainMenu->Add(new MenuItem("Begin game", [this]() -> void { _activeMenus.push_back(_gameTypeMenu); 	}));
 
 	_mainMenu->Add(new MenuItem("Configuration", [this]() -> void {
 		_activeMenus.push_back(_configMenu);
@@ -27,6 +21,12 @@ Game::Game(GraphicsAdapter* graphics, AudioAdapter* audio, InputHandler* input) 
 	}));
 	_mainMenu->Add(new MenuItem("Exit", [this]() -> void { Exiting = true; }));
 
+	_gameTypeMenu = new Menu(_graphics, _audio, _input);
+	_gameTypeMenu->Add(new MenuItem("Master", [this]() -> void { StartSession(Settings::Master); }));
+	_gameTypeMenu->Add(new MenuItem("Old School", [this]() -> void { StartSession(Settings::OldSchool); }));
+	_gameTypeMenu->Add(new MenuItem("Death", [this]() -> void { StartSession(Settings::Death); }));
+	_gameTypeMenu->Add(new MenuItem("Back", [this]() -> void { CloseMenu(); }));
+	
 	_configMenu = new Menu(_graphics, _audio, _input);
 	_configMenu->Add(new MenuItem("Controls", [this]() -> void {
 		_activeMenus.push_back(_keyConfigMenu);
@@ -43,7 +43,7 @@ Game::Game(GraphicsAdapter* graphics, AudioAdapter* audio, InputHandler* input) 
 			if (LoadedState != Loaded) return;
 			Replay* replay = new Replay(replayHeader->Filename); // TODO: Delete replay when done playing
 			auto* newSession = new Session(_graphics, _audio, _input);
-			newSession->Init(replay);
+			newSession->Init(Settings::Master, replay); //TODO: Get settings from replay
 			_activeSessions.push_back(newSession);
 			while (_activeMenus.size()) _activeMenus.erase(_activeMenus.begin());
 		}));
@@ -112,4 +112,11 @@ void Game::Draw() {
 		_graphics->DrawText("Loading game data...", 20, 725);
 
 	}
+}
+void Game::StartSession(Settings::Preset preset) {
+	if (LoadedState != Loaded) return;
+	auto newSession = new Session(_graphics, _audio, _input);
+	newSession->Init(preset);
+	_activeSessions.push_back(newSession);
+	_activeMenus.erase(_activeMenus.begin());
 }

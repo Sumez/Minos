@@ -1,5 +1,21 @@
 #include "stdafx.h"
 #include "Settings.h"
+#include "OldSchoolSettings.h"
+#include "DeathSettings.h"
+
+Settings* Settings::GetPreset(Preset preset) {
+	switch (preset) {
+		
+	case Master:
+		return new Settings();
+	case OldSchool:
+		return new OldSchoolSettings();
+	case Death:
+		return new DeathSettings();
+	default:
+		return new Settings();
+	}
+}
 
 MinoColors Settings::GetPieceColor(Mino::MinoType type) {
 	switch (type) {

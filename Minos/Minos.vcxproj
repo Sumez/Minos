@@ -85,12 +85,15 @@
   <ItemGroup>
     <ClInclude Include="AudioAdapter.h" />
     <ClInclude Include="Game\ControlConfigMenu.h" />
+    <ClInclude Include="Game\Coords.h" />
+    <ClInclude Include="Game\DeathSettings.h" />
     <ClInclude Include="Game\DisplayGrid.h" />
     <ClInclude Include="Game\Game.h" />
     <ClInclude Include="Game\GameWell.h" />
     <ClInclude Include="Game\InputReplay.h" />
     <ClInclude Include="Game\MainMenu.h" />
     <ClInclude Include="Game\Menu.h" />
+    <ClInclude Include="Game\OldSchoolSettings.h" />
     <ClInclude Include="Game\Replay.h" />
     <ClInclude Include="Game\Session.h" />
     <ClInclude Include="GraphicsAdapter.h" />
@@ -207,6 +210,7 @@
     <ClCompile Include="Game\MainMenu.cpp" />
     <ClCompile Include="Game\Menu.cpp" />
     <ClCompile Include="Game\Mino.cpp" />
+    <ClCompile Include="Game\OldSchoolSettings.cpp" />
     <ClCompile Include="Game\Randomizer.cpp" />
     <ClCompile Include="Game\Replay.cpp" />
     <ClCompile Include="Game\RotationSet.cpp" />

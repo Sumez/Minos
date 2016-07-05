@@ -50,15 +50,13 @@ std::map<InputHandler::ControlButton, std::vector<uint64_t>> LoadSettings() {
 	char mapSize = map.size();
 	file.read(&mapSize, 1);
 	for (int i = 0; i < mapSize; i++) {
-		//InputHandler::ControlButton> button
-		uint32_t button;
+		InputHandler::ControlButton button;
 		uint64_t keyId;
 		file.read((char*)&button, 4);
 		file.read((char*)&keyId, 8);
 
-		auto hejhej = static_cast<InputHandler::ControlButton>(button);
-		if (!map.count(hejhej)) map[hejhej] = std::vector<uint64_t>();
-		map[hejhej].push_back(keyId);
+		if (!map.count(button)) map[button] = std::vector<uint64_t>();
+		map[button].push_back(keyId);
 	}
 	file.close();
 	return map;
@@ -431,5 +429,4 @@ void SfmlInput::AdvanceFrame() {
 void SfmlInput::BeginRecording() {
 	_recording.clear();
 	_recording.reserve(100000);// Reserve a LOT of space for recording, to prevent sudden slowdown
-	int hej = 3;
 }

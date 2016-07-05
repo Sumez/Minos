@@ -8,12 +8,12 @@ Session::Session(GraphicsAdapter* graphics, AudioAdapter* audio, InputHandler* i
 	ReplayMenu(graphics, audio, input) {
 	
 	ReplayMenu.Add(new MenuItem("Quick restart", [this]() -> void {
-		Well.Init();
+		Well.Init(new Settings());
 	}));
 	ReplayMenu.Add(new MenuItem("Watch replay", [this]() -> void {
 		auto replay = Well.GetReplay(); // TODO: remember to destroy replay(?)
 		Well = GameWell(_graphics, _audio, _input);
-		Well.Init(replay);
+		Well.Init(new Settings(), replay);
 	}));
 	ReplayMenu.Add(new MenuItem("Save replay", [this]() -> void {
 		auto replay = Well.GetReplay();

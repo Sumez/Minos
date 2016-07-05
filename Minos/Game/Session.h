@@ -14,7 +14,7 @@ public:
 
 	GameWell Well;
 
-	void Init(Replay* replay = NULL) { Well.Init(replay); };
+	void Init(Settings::Preset settings, Replay* replay = NULL) { Well.Init(Settings::GetPreset(settings), replay); }; //TODO: Delete settings from memory
 	void Update();
 	void Draw();
 	Replay* GetReplay() { return Well.GetReplay(); };

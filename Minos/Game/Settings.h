@@ -1,8 +1,18 @@
 #pragma once
 #include "Mino.h"
+#include "Coords.h"
 
 class Settings {
 public:
+
+	enum Preset {
+		Custom = 0,
+		Master = 1,
+		OldSchool = 2,
+		Modern = 3,
+		Guide = 4,
+		Death = 5
+	};
 
 	enum ResetType {
 		None = 0x00,
@@ -11,32 +21,37 @@ public:
 		RotateReset = 0x04
 	};
 
-	void SetLevel(int level);
+	static Settings* GetPreset(Preset preset);
 
-	MinoColors GetPieceColor(Mino::MinoType type);
-	bool LevelOnSpawn() { return true; };
-	int MaxLevel() { return 999; };
-	int LockDelay() { return _lockDelay; };
-	int Gravity() { return _gravity; }; // 5120;
-	int GravityResolution() { return 256; };
-	int AreDelay(int row) { return _are; };
-	int AreDelayOnLineClear(int row) { return _lineAre; };
-	int LineClearDelay() { return _lineClearDelay; }; // TODO: 0 = next frame, right now the first frame seems to be skipped? Probably true for other delays as well
-	int GetDropScore(int droppedDistance);
-	int GetLineClearScore(int linesCleared);
-	int DasCharge() { return _dasCharge; };
-	int DasRepeat() { return 1; };
-	ResetType LockReset();
-	bool Irs() { return true; };
+	virtual void SetLevel(int level);
+
+	virtual Coords GridSize() { return Coords(10, 22); };
+	virtual int InvisibleRows() { return 2; };
+	virtual MinoColors GetPieceColor(Mino::MinoType type);
+	virtual bool LevelOnSpawn() { return true; };
+	virtual int MaxLevel() { return 999; };
+	virtual int LockDelay() { return _lockDelay; };
+	virtual int Gravity() { return _gravity; }; // 5120;
+	virtual int GravityResolution() { return 256; };
+	virtual int AreDelay(int row) { return _are; };
+	virtual int AreDelayOnLineClear(int row) { return _lineAre; };
+	virtual int LineClearDelay() { return _lineClearDelay; }; // TODO: 0 = next frame, right now the first frame seems to be skipped? Probably true for other delays as well
+	virtual int GetDropScore(int droppedDistance);
+	virtual int GetLineClearScore(int linesCleared);
+	virtual int DasCharge() { return _dasCharge; };
+	virtual int DasRepeat() { return 1; };
+	virtual ResetType LockReset();
+	virtual bool Irs() { return true; };
 
 
 	//TODO: RNG settings
 	//TODO: Define rotation system (ARS/SRS/NES/??) + wallkicks
 
 	//not implemented yet:
-	int GarbageHeight() { return 0; };
-	int MaxGhostLevel() { return 99; };
-private:
+	virtual bool LinesPerLevel() { return 1; };
+	virtual int GarbageHeight() { return 0; };
+	virtual int MaxGhostLevel() { return 99; };
+protected:
 	int _level;
 	int _are;
 	int _lineAre;

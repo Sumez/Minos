@@ -360,6 +360,15 @@
     <ClInclude Include="Game\Session.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Game\Coords.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Game\OldSchoolSettings.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Game\DeathSettings.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -417,6 +426,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Game\Session.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Game\OldSchoolSettings.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

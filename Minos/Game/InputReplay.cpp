@@ -31,6 +31,7 @@ void InputReplay::BeginRecording() {
 	ProcessInput();
 }
 void InputReplay::ProcessInput() {
+	if (_recording.size() <= _pointer) return;
 	int inputs = _recording[_pointer];
 	_pointer++;
 

@@ -22,7 +22,7 @@ public:
 
 	GameWell(GraphicsAdapter* graphics, AudioAdapter* audio, InputHandler* _input);
 	GameWell();
-	void Init(Replay* replay = NULL);
+	void Init(Settings* settings, Replay* replay = NULL);
 	void Update();
 	void Draw();
 	void Exit();
@@ -68,7 +68,7 @@ private:
 	InputHandler* _actualInput;
 	InputHandler* _input;
 	Mino _currentMino;
-	Settings _settings;
+	Settings* _settings;
 
 	DisplayGrid _gameGrid;
 	DisplayGrid _previewGrid;

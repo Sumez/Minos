@@ -21,6 +21,7 @@ public:
 
 private:
 	void CloseMenu();
+	void StartSession(Settings::Preset preset);
 
 	GraphicsAdapter* _graphics;
 	AudioAdapter* _audio;
@@ -29,6 +30,7 @@ private:
 	std::vector<Menu*> _activeMenus;
 
 	Menu* _mainMenu;
+	Menu* _gameTypeMenu;
 	Menu* _configMenu;
 	Menu* _replayMenu;
 	Menu* _keyConfigMenu;

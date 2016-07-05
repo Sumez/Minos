@@ -12,8 +12,9 @@ GameWell::GameWell(GraphicsAdapter* graphics, AudioAdapter* audio, InputHandler*
 	_actualInput = input;
 }
 
-void GameWell::Init(Replay* replay) {
+void GameWell::Init(Settings* settings, Replay* replay) { // TODO: Overload instead of two arguments. Include settings with replay data
 	
+	_settings = settings;
 	if (replay != NULL) {
 		_input = new InputReplay(replay->RecordedInput); // TODO: Delete input replay
 		_randomizer = Randomizer(&replay->MinoSequence);
@@ -22,14 +23,15 @@ void GameWell::Init(Replay* replay) {
 		_input = _actualInput;
 		_randomizer = Randomizer();
 	}
-	_grid = std::vector<std::vector<int>>(22, std::vector<int>(10));
+	auto GridSize = _settings->GridSize();
+	_grid = std::vector<std::vector<int>>(GridSize.y, std::vector<int>(GridSize.x));
 	_outlineBuffer = _grid;
 	_rowsToClear = std::vector<int>(0);
 	_firstMino = true;
 	_frame = 0;
 	_input->BeginRecording();
 	_level = 0;
-	_settings.SetLevel(0);
+	_settings->SetLevel(_level);
 	_score = 0;
 	_totalLines = 0;
 	spawnTimer = 120;
@@ -41,9 +43,9 @@ void GameWell::Init(Replay* replay) {
 	_gameGrid.Y = 50;
 	_gameGrid.CellWidth = 30;
 	_gameGrid.CellHeight = 30;
-	_gameGrid.Height = 22;
-	_gameGrid.Width = 10;
-	_gameGrid.InvisibleRows = 2;
+	_gameGrid.Height = GridSize.y;
+	_gameGrid.Width = GridSize.x;
+	_gameGrid.InvisibleRows = _settings->InvisibleRows();
 
 	_previewGrid = DisplayGrid();
 	_previewGrid.X = 100;
@@ -94,17 +96,17 @@ void GameWell::Update() {
 	};
 	if (left && dasState >= 0) {
 		dasState = -1;
-		dasTimer = _settings.DasCharge();
+		dasTimer = _settings->DasCharge();
 		moveX = dasState;
 	};
 	if (right && dasState <= 0) {
 		dasState = 1;
-		dasTimer = _settings.DasCharge();
+		dasTimer = _settings->DasCharge();
 		moveX = dasState;
 	};
 	if (dasState != 0) {
 		if (dasTimer == 0) {
-			dasTimer = _settings.DasRepeat();
+			dasTimer = _settings->DasRepeat();
 			moveX = dasState;
 		}
 		dasTimer--;
@@ -160,16 +162,16 @@ void GameWell::ApplyInput(int rotate, int moveX, int moveY, bool sonicDrop, bool
 	bool lock = false;
 	// Important! Attempt rotations before moving left/right, to allow synchro moves
 	if (rotate != 0 && TryRotate(_currentMino, rotate)) {
-		if (_settings.LockReset() & Settings::RotateReset) _currentMino.LockTimer = 0;
+		if (_settings->LockReset() & Settings::RotateReset) _currentMino.LockTimer = 0;
 	}
 	if (moveX != 0 && TryMove(_currentMino, moveX, 0)) {
-		if (_settings.LockReset() & Settings::MoveReset) _currentMino.LockTimer = 0;
+		if (_settings->LockReset() & Settings::MoveReset) _currentMino.LockTimer = 0;
 	}
 	if (moveY != 0) {
 		if (TryMove(_currentMino, 0, moveY)) {
 			_currentMino.DroppedDistance++;
 			_currentMino.GravityTimer = 0;
-			if (_settings.LockReset() & Settings::StepReset) _currentMino.LockTimer = 0;
+			if (_settings->LockReset() & Settings::StepReset) _currentMino.LockTimer = 0;
 		}
 		else lock = true; // TODO: Not if SRS softdrop
 	}
@@ -179,7 +181,7 @@ void GameWell::ApplyInput(int rotate, int moveX, int moveY, bool sonicDrop, bool
 		if (dropDistance > 0) {
 			_currentMino.DroppedDistance += dropDistance;
 			_currentMino.GravityTimer = 0;
-			if (_settings.LockReset() & Settings::StepReset) _currentMino.LockTimer = 0;
+			if (_settings->LockReset() & Settings::StepReset) _currentMino.LockTimer = 0;
 		}
 		_currentMino.Shift(0, dropDistance);
 		_currentMino.SetGhostDistance(0);
@@ -191,16 +193,16 @@ void GameWell::UpdatePreview() {
 	auto previewType = _randomizer.GetPreview(0);
 	Mino preview = Mino(previewType);
 	_previewMinoCoords = preview.GetCoords();
-	_previewMinoColor = _settings.GetPieceColor(previewType);
+	_previewMinoColor = _settings->GetPieceColor(previewType);
 }
 void GameWell::SpawnMino(Mino::MinoType type) {
-	if (!_firstMino && _settings.LevelOnSpawn() && (_level % 100 < 99) && _level < (_settings.MaxLevel() - 1)) IncreaseLevel(1); // TODO: Check level system + level stop
+	if (!_firstMino && _settings->LevelOnSpawn() && (_level % 100 < 99) && _level < (_settings->MaxLevel() - 1)) IncreaseLevel(1); // TODO: Check level system + level stop
 
 	_currentMino = Mino(type);
-	_currentMino.Color = _settings.GetPieceColor(type);
+	_currentMino.Color = _settings->GetPieceColor(type);
 	UpdateGhost(_currentMino);
 
-	if (_settings.Irs()) {
+	if (_settings->Irs()) {
 		if (_rLeft) TryRotate(_currentMino, -1);
 		if (_rRight) TryRotate(_currentMino, 1);
 	}
@@ -213,12 +215,12 @@ void GameWell::SpawnMino(Mino::MinoType type) {
 }
 void GameWell::IncreaseLevel(int amount) {
 	_level += amount;
-	if (_level >= _settings.MaxLevel()) {
-		_level = _settings.MaxLevel();
+	if (_level >= _settings->MaxLevel()) {
+		_level = _settings->MaxLevel();
 		//TODO: Winning!
 		State = GameOver;
 	}
-	_settings.SetLevel(_level);
+	_settings->SetLevel(_level);
 };
 void GameWell::ApplyGravity() {
 
@@ -226,17 +228,17 @@ void GameWell::ApplyGravity() {
 	if (_currentMino.IsLocking) { // Use STATE enum instead?
 		_currentMino.GravityTimer = 0;
 		// TODO: Get LockDelay based on function
-		if (_currentMino.LockTimer >= _settings.LockDelay()) LockMino(_currentMino);
+		if (_currentMino.LockTimer >= _settings->LockDelay()) LockMino(_currentMino);
 		_currentMino.LockTimer++;
 	}
 	else {
-		_currentMino.GravityTimer += _settings.Gravity();
-		while (_currentMino.GravityTimer >= _settings.GravityResolution()) {
-			_currentMino.GravityTimer -= _settings.GravityResolution();
+		_currentMino.GravityTimer += _settings->Gravity();
+		while (_currentMino.GravityTimer >= _settings->GravityResolution()) {
+			_currentMino.GravityTimer -= _settings->GravityResolution();
 			if (TryMove(_currentMino, 0, 1)) {
 				_currentMino.DroppedDistance = 0;
 				_currentMino.IsLocking = false;
-				if (_settings.LockReset() & Settings::StepReset) _currentMino.LockTimer = 0;
+				if (_settings->LockReset() & Settings::StepReset) _currentMino.LockTimer = 0;
 			}
 			else {
 				_currentMino.IsLocking = true;
@@ -256,11 +258,11 @@ void GameWell::ClearLines() {
 		for (int j = _rowsToClear[i]; j > 0; j--) {
 			_grid[j] = _grid[j - 1];
 		}
-		_grid[0] = std::vector<int>(10);
+		_grid[0] = std::vector<int>(_gameGrid.Width);
 	}
 	_rowsToClear.clear();
 	_audio->Play(AudioAdapter::Pickup);
-	BeginSpawningNextMino(_settings.AreDelayOnLineClear(lowestRow));
+	BeginSpawningNextMino(_settings->AreDelayOnLineClear(lowestRow));
 };
 void GameWell::LockMino(Mino & mino) {
 
@@ -276,7 +278,7 @@ void GameWell::LockMino(Mino & mino) {
 		_grid[y][x] = mino.Color;
 
 		bool clearThisLine = true;
-		for (int col = 0; col < 10; col++)
+		for (int col = 0; col < _gameGrid.Width; col++)
 			if (_grid[y][col] == 0) clearThisLine = false;
 
 		if (clearThisLine) {
@@ -286,13 +288,13 @@ void GameWell::LockMino(Mino & mino) {
 			}
 		}
 	}
-	if (clearedRows == 0) BeginSpawningNextMino(_settings.AreDelay(lowestRow));
+	if (clearedRows == 0) BeginSpawningNextMino(_settings->AreDelay(lowestRow));
 	else {
-		lineClearTimer = _settings.LineClearDelay();
+		lineClearTimer = _settings->LineClearDelay();
 		IncreaseTotalLines(clearedRows);
 	}
 	_audio->Play(AudioAdapter::Tick);
-	AddScore(_settings.GetDropScore(mino.DroppedDistance));
+	AddScore(_settings->GetDropScore(mino.DroppedDistance));
 	//inputHandler.ResetBuffers(); // Reset ARS and rotation buttons
 
 	/*if (false) { // TODO: Test code to provoke error
@@ -307,7 +309,7 @@ void GameWell::AddScore(int points) {
 };
 void GameWell::IncreaseTotalLines(int lines) {
 	_totalLines += lines;
-	AddScore(_settings.GetLineClearScore(lines));
+	AddScore(_settings->GetLineClearScore(lines));
 	IncreaseLevel(lines); //TODO: Depends on level system
 };
 bool GameWell::IsLineSetToClear(int rowIndex) {
@@ -352,8 +354,8 @@ bool GameWell::Collides(std::vector<std::vector<int>> & coords) {
 
 		if (checkY < 0) continue;
 		if (checkX < 0) return true;
-		if (checkX >= 10) return true;
-		if (checkY >= 22) return true;
+		if (checkX >= _gameGrid.Width) return true;
+		if (checkY >= _gameGrid.Height) return true;
 		if (_grid[checkY][checkX] > 0) return true;
 	}
 	return false;
@@ -377,24 +379,24 @@ void GameWell::Draw() {
 	_graphics->DrawBackdrop(&_gameGrid);
 
 	// Draw stack
-	for (int y = 0; y < 22; y++) {
+	for (int y = 0; y < _gameGrid.Height; y++) {
 		int mode = CellMode::Stack;
 		if (IsLineSetToClear(y)) mode = mode | CellMode::Clearing;
 		if (State == GameOver) mode = mode | CellMode::GameOver;
-		for (int x = 0; x < 10; x++) {
+		for (int x = 0; x < _gameGrid.Width; x++) {
 			_outlineBuffer[y][x] = 0;
 			if (_grid[y][x] > 0) {
 				_graphics->DrawCell(&_gameGrid, x, y, _grid[y][x], 0, static_cast<CellMode>(mode));
 				if (y > 0 && _grid[y - 1][x] == 0) _outlineBuffer[y][x] |= 0x01;
-				if (x < 10 - 1 && _grid[y][x + 1] == 0) _outlineBuffer[y][x] |= 0x02;
-				if (y < 22 - 1 && _grid[y + 1][x] == 0) _outlineBuffer[y][x] |= 0x04;
+				if (x < _gameGrid.Width - 1 && _grid[y][x + 1] == 0) _outlineBuffer[y][x] |= 0x02;
+				if (y < _gameGrid.Height - 1 && _grid[y + 1][x] == 0) _outlineBuffer[y][x] |= 0x04;
 				if (x > 0 && _grid[y][x - 1] == 0) _outlineBuffer[y][x] |= 0x08;
 			}
 		}
 	}
 
 	// Draw white outline
-	//_graphics->DrawOutline(&_gameGrid, _outlineBuffer);
+	_graphics->DrawOutline(&_gameGrid, _outlineBuffer);
 	
 	// draw Current Mino
 	if (spawnTimer < 0 && lineClearTimer < 0) { // TODO: Keep track of active mino(s)
@@ -406,7 +408,7 @@ void GameWell::Draw() {
 
 		coords = _currentMino.GetCoords();
 		for (int i = 0; i < 4; i++) {
-			_graphics->DrawCell(&_gameGrid, coords[i][0], coords[i][1], _currentMino.Color, (double)_currentMino.LockTimer / _settings.LockDelay());
+			_graphics->DrawCell(&_gameGrid, coords[i][0], coords[i][1], _currentMino.Color, (double)_currentMino.LockTimer / _settings->LockDelay());
 		};
 	}
 
